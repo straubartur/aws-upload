@@ -101,7 +101,7 @@ class CategoriesControllers {
 
 
             return res.status(201).json({
-                message: 'Descrição criada com sucesso',
+                message: 'Categoria criada com sucesso',
                 id
             })
         } catch (error) {
