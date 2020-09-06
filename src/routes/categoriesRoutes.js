@@ -8,5 +8,6 @@ categoriesRoutes.get('/', CategoriesController.getCategories);
 categoriesRoutes.get('/:id', CategoriesController.getCategories)
 categoriesRoutes.put('/:id', CategoriesController.updateCategories)
 categoriesRoutes.delete('/:id', CategoriesController.deleteCategories)
+categoriesRoutes.post('/', CategoriesController.createCategories)
 
 module.exports = categoriesRoutes;

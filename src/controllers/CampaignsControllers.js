@@ -1,7 +1,7 @@
 const knex = require('../database/knex')
 
-class CategoriesControllers {
-    async getCategories(req, res) {
+class CampaginsControllers {
+    async getCampaigns(req, res) {
         const { id } = req.params
         const { date, limit, page } = req.query;
         try {
@@ -9,10 +9,10 @@ class CategoriesControllers {
             const pageNumber = Number(page || '1');
             const offset = (pageNumber - 1) * limitNumber
 
-            const model = () => knex('Categories')
+            const model = () => knex('Campagins')
                 .where((queryBuilder) => {
                     if (date) {
-                        queryBuilder.where('Categories.createdAt', '>=', date)
+                        queryBuilder.where('Campagins.createdAt', '>=', date)
                     }
                     if(id) {
                         queryBuilder.where('id', id) 
@@ -20,26 +20,26 @@ class CategoriesControllers {
                 })
 
 
-            const categories = await model()
+            const campaigns = await model()
                     .limit(limitNumber)
                     .offset(offset)
                     .select('*')
 
 
-            const categoriesCount = await model()
+            const campaignsCount = await model()
                 .count();
     
-            const categoriesCountN = categoriesCount[0]
-                && categoriesCount[0]['count(*)']
+            const campaignsCountN = campaignsCount[0]
+                && campaignsCount[0]['count(*)']
         
             const paginate = [{
                 'page': pageNumber, 
-                'itensFound' : categoriesCountN,
-                'totalPages': Math.ceil(categoriesCountN / limitNumber)
+                'itensFound' : campaignsCountN,
+                'totalPages': Math.ceil(campaignsCountN / limitNumber)
             }]
 
             return res.status(200).json({
-                data: categories,
+                data: campaigns,
                 paginate
             })
         } catch (error) {
@@ -50,27 +50,30 @@ class CategoriesControllers {
         }
     }
 
-    async updateCategories (req, res) {
+    async updateCampaigns (req, res) {
         try {
             const { id } = req.params;
-            const { name, description } = req.body;
+            const { name, endDate, isPublished } = req.body;
 
             console.log(req.params, orderId)
 
-            await knex('Categories')
+            await knex('Campaigns')
                 .where('id', id)
                 .update({
                     ...name && {
                         name
                     },
-                    ...description && {
-                        description
+                    ...endDate && {
+                        end_date: endDate
+                    },
+                    ...isPublished && {
+                        is_publised: isPublished
                     }
                 })
 
 
             return res.status(204).json({
-                message: 'categoria modificada com sucesso',
+                message: 'campanha modificada com sucesso',
                 id
             })
         } catch (error) {
@@ -81,27 +84,28 @@ class CategoriesControllers {
         }
     }
 
-    async createCategories (req, res) {
+    async createCampaigns (req, res) {
         try {
-            const { id } = req.params;
-            const { name, description } = req.body;
+            const { name, isPublished, endDate } = req.body;
 
             if(!name) res.send(400).json({ message: 'O nome é um atributo obrtigatório'})
-            if(!description) res.send(400).json({ message: 'A descrição é um atributo obrtigatório'})
 
-            await knex('Categories')
+            await knex('Campaigns')
                 .insert({
                     ...name && {
                         name
                     },
-                    ...description && {
-                        description
+                    ...isPublished && {
+                        is_publised: isPublished
+                    },
+                    ...endDate && {
+                        end_date: endDate
                     }
                 })
 
 
             return res.status(201).json({
-                message: 'Descrição criada com sucesso',
+                message: 'Campanha criada com sucesso',
                 id
             })
         } catch (error) {
@@ -112,16 +116,16 @@ class CategoriesControllers {
         }
     }
 
-    async deleteCategories (req, res) {
+    async deleteCampaigns (req, res) {
         try {
             const { id } = req.params;
 
-            await knex('Categories')
+            await knex('Campaigns')
                 .where('id', id)
                 .del()
 
             return res.status(204).json({
-                message: 'Categoria deletada com sucesso',
+                message: 'campanha deletada com sucesso',
                 id
             })
         } catch (error) {
@@ -134,4 +138,4 @@ class CategoriesControllers {
 }   
 
 
-module.exports = new CategoriesControllers();
+module.exports = new CampaginsControllers();

@@ -5,6 +5,7 @@ exports.up = function(knex) {
         table.text('name').notNullable();
         table.integer('is_published').defaultTo(false)
         table.timestamp('created_at').defaultTo(knex.fn.now())
+        table.timestamp('end_date')
     })
 };
 
