@@ -6,12 +6,12 @@ exports.up = function(knex) {
         table.text('email').notNullable();
         table.text('phone').notNullable();
         table.text('rank').notNullable().defaultTo('Consultora');
-        table.text('custom_name')
-        table.text('custom_phone')
-        table.timestamps()
-    })
+        table.text('custom_name');
+        table.text('custom_phone');
+        table.timestamps();
+    });
 };
 
 exports.down = function(knex) {
-    return knex.schema.dropTable('Customers') 
+    return knex.schema.dropTable('Customers');
 };
