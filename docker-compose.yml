@@ -1,0 +1,28 @@
+version: "3.1"
+services:
+  app:
+    image: node:10.20-alpine3.11
+    container_name: my-app
+    working_dir: /opt/app
+    volumes:
+      - .:/opt/app
+    links:
+      - mysql
+    ports:
+      - "3336"
+    entrypoint: "npm run dev"
+    env_file: .env
+    environment:
+      "NODE_ENV": "development"
+
+  mysql:
+    image: mysql:5.7
+    container_name: mysql
+    volumes:
+      - ./data:/var/lib/mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      "MYSQL_DATABASE": "${DB_DATABASE}"
+      "MYSQL_ROOT_PASSWORD": "${DB_PASSWORD}"

@@ -3,9 +3,9 @@ exports.up = function(knex) {
     return knex.schema.createTable('Campaigns', (table)=>{
         table.increments('id');
         table.text('name').notNullable();
-        table.integer('is_published').defaultTo(false)
-        table.timestamp('created_at').defaultTo(knex.fn.now())
-        table.timestamp('end_date')
+        table.boolean('is_published').defaultTo(false)
+        table.datetime('end_date')
+        table.timestamps()
     })
 };
 

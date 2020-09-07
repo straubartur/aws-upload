@@ -8,7 +8,7 @@ exports.up = function(knex) {
         table.text('rank').notNullable().defaultTo('Consultora');
         table.text('custom_name')
         table.text('custom_phone')
-        table.timestamp('created_at').defaultTo(knex.fn.now())
+        table.timestamps()
     })
 };
 

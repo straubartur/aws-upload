@@ -44,7 +44,7 @@ class AuthController {
     async signUp () {
         const { name, email, password } = req.query;
         try {
-            bcrypt.hash(password, saltRounds, function (err, hash) {
+            bcrypt.hash(password, saltRounds, async (err, hash) => {
                 await knex('users')
                     .insert({ 
                         name,

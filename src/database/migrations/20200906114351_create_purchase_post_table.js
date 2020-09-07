@@ -1,10 +1,10 @@
 
 exports.up = function(knex) {
-    return knex.schema.createTable('Campaign_posts', (table)=>{
+    return knex.schema.createTable('Purchase_posts', (table)=>{
         table.increments('id');
-        table.integer('campaign_post_id').notNullable();
-        table.integer('purchase_id').notNullable();
-        table.text('aws_path').notNullable();
+        table.integer('campaign_post_id').unsigned().notNullable();
+        table.integer('purchase_id').unsigned().notNullable();
+        table.text('aws_path');
         table.timestamp('created_at').defaultTo(knex.fn.now());
 
         table.foreign('purchase_id').references('Purchases.id')
@@ -13,5 +13,5 @@ exports.up = function(knex) {
 };
 
 exports.down = function(knex) {
-    return knex.schema.dropTable('Campaign_posts') 
+    return knex.schema.dropTable('Purchase_posts') 
 };

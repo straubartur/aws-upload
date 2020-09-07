@@ -3,7 +3,7 @@ exports.up = function(knex) {
         table.increments('id');
         table.text('name').notNullable();
         table.text('description');
-        table.timestamp('created_at').defaultTo(knex.fn.now())
+        table.timestamps()
     })
 };
 
