@@ -8,6 +8,7 @@ exports.up = function(knex) {
         table.text('rank').notNullable().defaultTo('Consultora');
         table.text('custom_name');
         table.text('custom_phone');
+        table.integer('loja_integrada_id').notNullable().unsigned();
         table.timestamps();
     });
 };
