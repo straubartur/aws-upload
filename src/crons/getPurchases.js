@@ -23,7 +23,7 @@ cron.schedule("*/20 * * * *", async () => {
             let custumerId
 
             const { cliente = {}, itens } = await axios
-                .get(`ttps://api.awsli.com.br/v1/pedido/pedido_id=${newPurchases[i].numero}`, {
+                .get(`https://api.awsli.com.br/v1/pedido/pedido_id=${newPurchases[i].numero}`, {
                     headers: {
                         'Content-Type': 'application/json' 
                     }
