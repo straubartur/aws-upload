@@ -1,6 +1,6 @@
 const knex = require('../database/knex')
 
-class CategoriesControllers {
+class CustumersControllers {
     async getCustumers (req, res) {
         const { id } = req.params
         const { date, limit, page } = req.query;
@@ -61,8 +61,6 @@ class CategoriesControllers {
                 rank,
                 phone
             } = req.body;
-
-            console.log(req.params, orderId)
 
             await knex('Custumers')
                 .where('id', id)
@@ -176,4 +174,4 @@ class CategoriesControllers {
 }   
 
 
-module.exports = new CategoriesControllers();
+module.exports = new CustumersControllers();
