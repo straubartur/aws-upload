@@ -2,9 +2,11 @@ const cron = require("node-cron");
 const knex = require('../database/knex');
 const axios = require('axios');
 
+
+const PURCHASES_URL = 'https://api.awsli.com.br/v1/pedido/search/?'
+const PURCHASE_DETAIL_URL = 'https://api.awsli.com.br/v1/pedido/pedido_id='
 /**
- * Cron configured to run every 5 minutes
- * from 10 to 17
+ * Cron configured to run every 20 minutes
  */
 cron.schedule("*/20 * * * *", async () => {
     const lastPurchase = await knex('Purchases')
@@ -12,7 +14,7 @@ cron.schedule("*/20 * * * *", async () => {
         .first()
 
 
-    const newPurchases = await axios.get(`https://api.awsli.com.br/v1/pedido/search/?since_numero=${lastPurchase}`, {
+    const newPurchases = await axios.get(`${PURCHASES_URL}since_numero=${lastPurchase}`, {
         headers: {
             'Content-Type': 'application/json' 
         }
@@ -23,7 +25,7 @@ cron.schedule("*/20 * * * *", async () => {
             let custumerId
 
             const { cliente = {}, itens } = await axios
-                .get(`https://api.awsli.com.br/v1/pedido/pedido_id=${newPurchases[i].numero}`, {
+                .get(`${PURCHASE_DETAIL_URL}${newPurchases[i].numero}`, {
                     headers: {
                         'Content-Type': 'application/json' 
                     }
