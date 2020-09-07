@@ -9,7 +9,7 @@ services:
     depends_on:
       - mysql
     ports:
-      - "3336"
+      - "3336:3336"
     entrypoint: "npm run dev"
     env_file: .env
     environment:
