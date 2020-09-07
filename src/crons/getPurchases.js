@@ -45,7 +45,7 @@ cron.schedule("*/20 * * * *", async () => {
                         phone: cliente.telefone_celular
                     })
                     .where({
-                        loja_integrada_id: newPurchases[i].numero
+                        loja_integrada_purchase_id: newPurchases[i].numero
                     })
             } else {
                 [custumerId] = await knex('Customers')
@@ -53,7 +53,7 @@ cron.schedule("*/20 * * * *", async () => {
                         name: cliente.nome,
                         email: cliente.email,
                         phone: cliente.telefone_celular,
-                        loja_integrada_id: newPurchases[i].numero
+                        loja_integrada_purchase_id: newPurchases[i].numero
                     })
             }
             
