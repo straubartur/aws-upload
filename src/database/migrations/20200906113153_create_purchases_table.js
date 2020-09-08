@@ -4,6 +4,7 @@ exports.up = function(knex) {
         table.increments('id');
         table.integer('customer_id').unsigned().notNullable();
         table.integer('package_id').unsigned().notNullable();
+        table.integer('loja_integrada_id').unsigned().notNullable();
         table.boolean('is_paid').notNullable().defaultTo(false);
         table.timestamps();
 

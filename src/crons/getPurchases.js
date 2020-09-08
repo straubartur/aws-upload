@@ -1,56 +1,74 @@
 const cron = require("node-cron");
 const knex = require('../database/knex');
-const { persistAndNotificate } = require('../controllers/notificationControllers');
+const axios = require('axios');
 
+
+const PURCHASES_URL = 'https://api.awsli.com.br/v1/pedido/search/?'
+const PURCHASE_DETAIL_URL = 'https://api.awsli.com.br/v1/pedido/pedido_id='
 /**
- * get the current time and convert to maria db format
- * @param { Number } hoursToValidade number of max hours to 
- * @returns { String } date
+ * Cron configured to run every 20 minutes
  */
-function getChangeTime(hoursToValidade) {
-    const datetime = new Date();
-    datetime.setHours(datetime.getHours() - hoursToValidade);
-    const date = datetime.toISOString()
-    return date
-}
+cron.schedule("*/20 * * * *", async () => {
+    const lastPurchase = await knex('Purchases')
+        .orderBy('id', 'desc')
+        .first()
 
 
-/**
- * Cron configured to run every 5 minutes
- * from 10 to 17
- */
-cron.schedule("*/5 10-17 * * *", async () => {
-    const orders = await knex('orders')
-        .where('orders.createdAt', '<', getChangeTime(2))
-        .join('orderForm', 'orders.orderFormId', '=', 'orderForm.orderToken')
-        .andWhere('status_id', waitingApprovalStatus)
-        .andWhereNot('reseller_id', intelbrasResellerId)
-        .select('*')
-
-    const orderFormTokens = orders.map(order => order.orderFormId)
-
-    await knex('orderForm')
-        .update({
-            reseller_id: intelbrasResellerId,
-            status_id: 6
-        })
-        .whereIn(
-            'orderToken', orderFormTokens
-        )
+    const newPurchases = await axios.get(`${PURCHASES_URL}since_numero=${lastPurchase}`, {
+        headers: {
+            'Content-Type': 'application/json' 
+        }
+    })
     
-    for (let i = 0; i < orders.length; i++) {
-        await persistAndNotificate(
-            'Cron time automated process',
-            orders[i].orders_id,
-            notAprovedStatus,
-            intel
-        )
-        await knex('orderStatusRoad')
-            .insert({
-                orderId: orders[i].orders_id,
-                statusId: 6,
-                operatorId: 'Cron time automated process',
-            })
+    for (let i = 0; i < newPurchases.length; i++) {
+        try {
+            let custumerId
+
+            const { cliente = {}, itens } = await axios
+                .get(`${PURCHASE_DETAIL_URL}${newPurchases[i].numero}`, {
+                    headers: {
+                        'Content-Type': 'application/json' 
+                    }
+                })
+
+            const custumer = await knex('Customers')
+                .where({
+                    loja_integrada_id:  newPurchases[i].numero
+                })
+                .first();
+
+            if (custumer && custumer.id) {
+                await knex('Customers')
+                    .update({
+                        name: cliente.nome,
+                        email: cliente.email,
+                        phone: cliente.telefone_celular
+                    })
+                    .where({
+                        loja_integrada_purchase_id: newPurchases[i].numero
+                    })
+            } else {
+                [custumerId] = await knex('Customers')
+                    .create({
+                        name: cliente.nome,
+                        email: cliente.email,
+                        phone: cliente.telefone_celular,
+                        loja_integrada_purchase_id: newPurchases[i].numero
+                    })
+            }
+            
+            const sku = itens && itens[0] && itens[0].sku;
+            
+            await knex('Purchases')
+                .insert({
+                    is_paid: false,
+                    loja_integrada_id: newPurchases[i].numero,
+                    customer_id: custumer && custumer.id || custumerId,
+                    package_id: sku
+                })
+        } catch (error) {
+            continue
+        }
     }
 }, {
     scheduled: true,
