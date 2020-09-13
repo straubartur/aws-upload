@@ -33,7 +33,7 @@ class PackagesController {
             const paginate = [{
                 'page': pageNumber, 
                 'itensFound' : packagesCountN,
-                'totalPages': Math.ceil(packagesCount / limitNumber) || 0
+                'totalPages': Math.ceil(packagesCount / limitNumber) || 1
             }]
 
             return res.status(200).json({
@@ -50,13 +50,15 @@ class PackagesController {
 
     async createPackage (req, res) {
         try {
-            const body = req.body;
+            const body = req.body || {};
 
             if (!body.name) {
                 return res.send(400).json({
-                    message: 'O nome é um atributo obrtigatório'
+                    message: 'O nome é um atributo obrigatório'
                 });
             }
+
+            delete body.is_published;
 
             const id = await knex('Packages')
                 .insert(body);
@@ -78,12 +80,17 @@ class PackagesController {
             const { id } = req.params;
             const body = req.body;
 
-            console.log(req.params, id)
+            if (!body.name) {
+                return res.send(400).json({
+                    message: 'O nome é um atributo obrigatório'
+                });
+            }
+
+            delete body.is_published;
 
             await knex('Packages')
                 .where('id', id)
                 .update(body)
-
 
             return res.status(200).json({
                 message: 'Package modificada com sucesso',
@@ -107,6 +114,26 @@ class PackagesController {
 
             return res.status(204).json({
                 message: 'Package deletada com sucesso',
+                id
+            })
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json({
+                message: error
+            }) 
+        }
+    }
+
+    async publishPackage(req, res) {
+        try {
+            const { id } = req.params;
+
+            await knex('Packages')
+                .where('id', id)
+                .update({ is_published: true })
+
+            return res.status(200).json({
+                message: 'Package publicada com sucesso',
                 id
             })
         } catch (error) {

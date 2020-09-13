@@ -35,7 +35,7 @@ class CategoriesControllers {
             const paginate = [{
                 'page': pageNumber, 
                 'itensFound' : categoriesCountN,
-                'totalPages': Math.ceil(categoriesCountN / limitNumber)
+                'totalPages': Math.ceil(categoriesCountN / limitNumber) || 1
             }]
 
             return res.status(200).json({
@@ -53,23 +53,16 @@ class CategoriesControllers {
     async updateCategories (req, res) {
         try {
             const { id } = req.params;
-            const { name, description } = req.body;
+            const body = req.body || {};
 
-            console.log(req.params, orderId)
+            if(!body.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
+            if(!body.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
 
             await knex('Categories')
                 .where('id', id)
-                .update({
-                    ...name && {
-                        name
-                    },
-                    ...description && {
-                        description
-                    }
-                })
+                .update(body);
 
-
-            return res.status(204).json({
+            return res.status(200).json({
                 message: 'categoria modificada com sucesso',
                 id
             })
@@ -83,26 +76,17 @@ class CategoriesControllers {
 
     async createCategories (req, res) {
         try {
-            const { id } = req.params;
-            const { name, description } = req.body;
+            const body = req.body || {};
 
-            if(!name) res.send(400).json({ message: 'O nome é um atributo obrtigatório'})
-            if(!description) res.send(400).json({ message: 'A descrição é um atributo obrtigatório'})
+            if(!body.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
+            if(!body.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
 
-            await knex('Categories')
-                .insert({
-                    ...name && {
-                        name
-                    },
-                    ...description && {
-                        description
-                    }
-                })
-
+            const id = await knex('Categories')
+                .insert(body);
 
             return res.status(201).json({
                 message: 'Categoria criada com sucesso',
-                id
+                id: id.pop()
             })
         } catch (error) {
             console.log(error)
@@ -120,7 +104,7 @@ class CategoriesControllers {
                 .where('id', id)
                 .del()
 
-            return res.status(204).json({
+            return res.status(200).json({
                 message: 'Categoria deletada com sucesso',
                 id
             })
@@ -131,7 +115,6 @@ class CategoriesControllers {
             }) 
         }
     }
-}   
-
+}
 
 module.exports = new CategoriesControllers();
