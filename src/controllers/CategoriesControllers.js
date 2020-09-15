@@ -105,7 +105,7 @@ class CategoriesControllers {
                 .where('id', id)
                 .del()
 
-            return res.status(200).json({
+            return res.status(204).json({
                 message: 'Categoria deletada com sucesso',
                 id
             })
