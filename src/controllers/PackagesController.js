@@ -1,3 +1,4 @@
+const { buildPaginate } = require('../utils/paginationResponse');
 const knex = require('../database/knex')
 const uuid = require('uuid')
 
@@ -24,18 +25,7 @@ class PackagesController {
                     .offset(offset)
                     .select('*')
 
-
-            const packagesCount = await model()
-                .count();
-    
-            const packagesCountN = packagesCount[0]
-                && packagesCount[0]['count(*)']
-        
-            const paginate = [{
-                'page': pageNumber, 
-                'itensFound' : packagesCountN,
-                'totalPages': Math.ceil(packagesCount / limitNumber) || 1
-            }]
+            const paginate = await buildPaginate(pageNumber, model, limitNumber);
 
             return res.status(200).json({
                 data: packages,

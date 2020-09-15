@@ -1,4 +1,5 @@
 const uuid = require('uuid')
+const { buildPaginate } = require('../utils/paginationResponse');
 const knex = require('../database/knex');
 const PackagePostValidator = require('../validator/PackagePostValidator');
 const S3 = require('../services/s3')
@@ -44,17 +45,7 @@ class PackagePostsControllers {
                     .offset(offset)
                     .select('*')
 
-
-            const postsCount = await model().count()
-    
-            const postsCountN = postsCount[0]
-                && postsCount[0]['count(*)']
-        
-            const paginate = [{
-                'page': pageNumber, 
-                'itensFound' : postsCountN,
-                'totalPages': Math.ceil(postsCountN / limitNumber) || 1
-            }]
+            const paginate = await buildPaginate(pageNumber, model, limitNumber);
 
             return res.status(200).json({
                 data: posts,

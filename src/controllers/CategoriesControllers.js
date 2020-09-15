@@ -1,4 +1,5 @@
 const uuid = require('uuid')
+const { buildPaginate } = require('../utils/paginationResponse');
 const knex = require('../database/knex')
 
 class CategoriesControllers {
@@ -25,17 +26,7 @@ class CategoriesControllers {
                     .offset(offset)
                     .select('*')
 
-            const categoriesCount = await model()
-                .count();
-
-            const categoriesCountN = categoriesCount[0]
-                && categoriesCount[0]['count(*)']
-
-            const paginate = [{
-                'page': pageNumber, 
-                'itensFound' : categoriesCountN,
-                'totalPages': Math.ceil(categoriesCountN / limitNumber) || 1
-            }]
+            const paginate = await buildPaginate(pageNumber, model, limitNumber);
 
             return res.status(200).json({
                 data: categories,
