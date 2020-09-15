@@ -1,5 +1,6 @@
 const uuid = require('uuid')
 const { buildPaginate } = require('../utils/paginationResponse');
+const { buildMessage } = require('../utils/buildMessage');
 const knex = require('../database/knex');
 const PackagePostValidator = require('../validator/PackagePostValidator');
 const S3 = require('../services/s3')
@@ -53,9 +54,7 @@ class PackagePostsControllers {
             })
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error.message
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -66,22 +65,15 @@ class PackagePostsControllers {
             const { error } = PackagePostValidator.PackagePostList.validate(body);
 
             if (error) {
-                return res.status(500).json({
-                    message: 'Ops! Algo deu errado =[',
-                    error
-                });
+                return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
             }
 
             await knex('Package_posts').insert(body);
 
-            return res.status(200).json({
-                message: 'Posts criado com sucesso'
-            })
+            return res.status(200).json(buildMessage('Posts criado com sucesso'));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -105,15 +97,10 @@ class PackagePostsControllers {
 
             S3.deleteObjectByKey(post.aws_path);
 
-            return res.status(200).json({
-                message: 'Post deletada com sucesso',
-                post
-            })
+            return res.status(204).json(buildMessage('Post deletado com sucesso'));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -122,9 +109,7 @@ class PackagePostsControllers {
         const urlQuantity = Number(quantity);
 
         if (Number.isNaN(urlQuantity) || urlQuantity < 1) {
-            return res.status(500).json({
-                message: 'Quantidade de URL precisa ser um número maior que 0.'
-            });
+            return res.status(500).json(buildMessage('Quantidade de URL precisa ser um número maior que 0.'));
         }
 
         const generateUrls = [];
@@ -136,9 +121,7 @@ class PackagePostsControllers {
             .then(uploadURLs => res.status(200).json(uploadURLs))
             .catch(error => {
                 console.log(error);
-                return res.status(500).json({
-                    message: error
-                }) 
+                return res.status(500).json(buildMessage(error.message));
             });
     }
 }

@@ -1,5 +1,6 @@
 const uuid = require('uuid')
 const { buildPaginate } = require('../utils/paginationResponse');
+const { buildMessage } = require('../utils/buildMessage');
 const knex = require('../database/knex')
 
 class CategoriesControllers {
@@ -34,9 +35,7 @@ class CategoriesControllers {
             })
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -45,22 +44,21 @@ class CategoriesControllers {
             const { id } = req.params;
             const category = req.body || {};
 
-            if(!category.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
-            if(!category.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
+            if(!category.name) {
+                return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
+            }
+            if(!category.description) {
+                return res.status(400).json(buildMessage('A descrição é um atributo obrigatório'));
+            }
 
             await knex('Categories')
                 .where('id', id)
                 .update(category);
 
-            return res.status(200).json({
-                message: 'categoria modificada com sucesso',
-                id
-            })
+            return res.status(200).json(buildMessage('categoria modificada com sucesso', { id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -68,23 +66,22 @@ class CategoriesControllers {
         try {
             const category = req.body || {};
 
-            if(!category.name) res.status(400).json({ message: 'O nome é um atributo obrigatório'})
-            if(!category.description) res.status(400).json({ message: 'A descrição é um atributo obrigatório'})
+            if(!category.name) {
+                return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
+            }
+            if(!category.description) {
+                return res.status(400).json(buildMessage('A descrição é um atributo obrigatório'));
+            }
 
             category.id = uuid.v4();
 
             await knex('Categories')
                 .insert(category);
 
-            return res.status(201).json({
-                message: 'Categoria criada com sucesso',
-                id: category.id
-            })
+            return res.status(201).json(buildMessage('Categoria criada com sucesso', { id: category.id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -96,15 +93,10 @@ class CategoriesControllers {
                 .where('id', id)
                 .del()
 
-            return res.status(204).json({
-                message: 'Categoria deletada com sucesso',
-                id
-            })
+            return res.status(204).json(buildMessage('Categoria deletada com sucesso', { id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 }

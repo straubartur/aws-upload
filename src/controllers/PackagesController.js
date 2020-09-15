@@ -1,4 +1,5 @@
 const { buildPaginate } = require('../utils/paginationResponse');
+const { buildMessage } = require('../utils/buildMessage');
 const knex = require('../database/knex')
 const uuid = require('uuid')
 
@@ -33,9 +34,7 @@ class PackagesController {
             })
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -44,9 +43,7 @@ class PackagesController {
             const pkg = req.body || {};
 
             if (!pkg.name) {
-                return res.send(400).json({
-                    message: 'O nome é um atributo obrigatório'
-                });
+                return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
             }
 
             delete pkg.is_published;
@@ -55,15 +52,10 @@ class PackagesController {
             await knex('Packages')
                 .insert(pkg);
 
-            return res.status(201).json({
-                message: 'Package criada com sucesso',
-                id: pkg.id
-            });
+            return res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -73,9 +65,7 @@ class PackagesController {
             const pkg = req.body || {};
 
             if (!pkg.name) {
-                return res.send(400).json({
-                    message: 'O nome é um atributo obrigatório'
-                });
+                return res.send(400).json(buildMessage('O nome é um atributo obrigatório'));
             }
 
             delete pkg.is_published;
@@ -84,15 +74,10 @@ class PackagesController {
                 .where('id', id)
                 .update(pkg)
 
-            return res.status(200).json({
-                message: 'Package modificada com sucesso',
-                id
-            })
+            return res.status(200).json(buildMessage('Package modificado com sucesso', id));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -104,15 +89,10 @@ class PackagesController {
                 .where('id', id)
                 .del()
 
-            return res.status(204).json({
-                message: 'Package deletada com sucesso',
-                id
-            })
+            return res.status(204).json(buildMessage('Package deletada com sucesso', { id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -127,14 +107,10 @@ class PackagesController {
             // TODO: customizar todos os pacotes comprados!
             // Customizer.AllPurchasesByPackage(pkg);
 
-            return res.status(200).json({
-                message: 'Package publicada com sucesso'
-            })
+            return res.status(200).json(buildMessage('Package publicada com sucesso'));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 }
