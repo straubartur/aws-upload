@@ -129,7 +129,6 @@ class PackagePostsControllers {
         }
     }
 
-
     async generateUrls(req, res) {
         const { packageId, quantity } = req.params;
         const urlQuantity = Number(quantity);
