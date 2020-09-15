@@ -1,4 +1,5 @@
 const knex = require('../database/knex')
+const uuid = require('uuid')
 
 class PackagesController {
 
@@ -50,23 +51,24 @@ class PackagesController {
 
     async createPackage (req, res) {
         try {
-            const body = req.body || {};
+            const pkg = req.body || {};
 
-            if (!body.name) {
+            if (!pkg.name) {
                 return res.send(400).json({
                     message: 'O nome é um atributo obrigatório'
                 });
             }
 
-            delete body.is_published;
+            delete pkg.is_published;
+            pkg.id = uuid.v4();
 
-            const id = await knex('Packages')
-                .insert(body);
+            await knex('Packages')
+                .insert(pkg);
 
             return res.status(201).json({
                 message: 'Package criada com sucesso',
-                id: id.pop()
-            })
+                id: pkg.id
+            });
         } catch (error) {
             console.log(error)
             return res.status(500).json({
@@ -78,19 +80,19 @@ class PackagesController {
     async updatePackage (req, res) {
         try {
             const { id } = req.params;
-            const body = req.body;
+            const pkg = req.body || {};
 
-            if (!body.name) {
+            if (!pkg.name) {
                 return res.send(400).json({
                     message: 'O nome é um atributo obrigatório'
                 });
             }
 
-            delete body.is_published;
+            delete pkg.is_published;
 
             await knex('Packages')
                 .where('id', id)
-                .update(body)
+                .update(pkg)
 
             return res.status(200).json({
                 message: 'Package modificada com sucesso',
@@ -128,13 +130,15 @@ class PackagesController {
         try {
             const { id } = req.params;
 
-            await knex('Packages')
+            const pkg = await knex('Packages')
                 .where('id', id)
                 .update({ is_published: true })
 
+            // TODO: customizar todos os pacotes comprados!
+            // Customizer.AllPurchasesByPackage(pkg);
+
             return res.status(200).json({
-                message: 'Package publicada com sucesso',
-                id
+                message: 'Package publicada com sucesso'
             })
         } catch (error) {
             console.log(error)

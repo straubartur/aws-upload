@@ -8,10 +8,10 @@ const authRoutes = require('./authRoutes')
 
 const routes = Router()
 
-routes.use('/categories', categoriesRoutes)
-routes.use('/packages', packageRoutes)
-
 routes.use('/auth', authRoutes)
-routes.use('/custumers', custumersRoutes)
+
+routes.use('/api/categories', categoriesRoutes)
+routes.use('/api/packages', packageRoutes)
+routes.use('/api/custumers', custumersRoutes)
 
 module.exports = routes;

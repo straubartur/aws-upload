@@ -1,3 +1,4 @@
+const uuid = require('uuid')
 const knex = require('../database/knex')
 
 class CategoriesControllers {
@@ -19,19 +20,17 @@ class CategoriesControllers {
                     }
                 })
 
-
             const categories = await model()
                     .limit(limitNumber)
                     .offset(offset)
                     .select('*')
 
-
             const categoriesCount = await model()
                 .count();
-    
+
             const categoriesCountN = categoriesCount[0]
                 && categoriesCount[0]['count(*)']
-        
+
             const paginate = [{
                 'page': pageNumber, 
                 'itensFound' : categoriesCountN,
@@ -53,14 +52,14 @@ class CategoriesControllers {
     async updateCategories (req, res) {
         try {
             const { id } = req.params;
-            const body = req.body || {};
+            const category = req.body || {};
 
-            if(!body.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
-            if(!body.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
+            if(!category.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
+            if(!category.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
 
             await knex('Categories')
                 .where('id', id)
-                .update(body);
+                .update(category);
 
             return res.status(200).json({
                 message: 'categoria modificada com sucesso',
@@ -76,17 +75,19 @@ class CategoriesControllers {
 
     async createCategories (req, res) {
         try {
-            const body = req.body || {};
+            const category = req.body || {};
 
-            if(!body.name) res.send(400).json({ message: 'O nome é um atributo obrigatório'})
-            if(!body.description) res.send(400).json({ message: 'A descrição é um atributo obrigatório'})
+            if(!category.name) res.status(400).json({ message: 'O nome é um atributo obrigatório'})
+            if(!category.description) res.status(400).json({ message: 'A descrição é um atributo obrigatório'})
 
-            const id = await knex('Categories')
-                .insert(body);
+            category.id = uuid.v4();
+
+            await knex('Categories')
+                .insert(category);
 
             return res.status(201).json({
                 message: 'Categoria criada com sucesso',
-                id: id.pop()
+                id: category.id
             })
         } catch (error) {
             console.log(error)
