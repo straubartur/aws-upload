@@ -71,7 +71,6 @@ class PackagePostsControllers {
 
     async createPosts (req, res) {
         try {
-            // const { packageId } = req.params;
             const body = req.body || [];
 
             const { error } = PackagePostValidator.PackagePostList.validate(body);
