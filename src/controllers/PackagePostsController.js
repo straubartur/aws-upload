@@ -45,8 +45,7 @@ class PackagePostsControllers {
                     .select('*')
 
 
-            const postsCount = await model()
-                .count();
+            const postsCount = await model().count()
     
             const postsCountN = postsCount[0]
                 && postsCount[0]['count(*)']
