@@ -1,9 +1,10 @@
 exports.up = function(knex) {
     return knex.schema.createTable('Categories', (table)=>{
-        table.increments('id');
+        table.uuid('id').primary();
         table.text('name').notNullable();
         table.text('description');
-        table.timestamps()
+        table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
+        table.dateTime('updated_at').defaultTo(knex.raw('NULL ON UPDATE CURRENT_TIMESTAMP'))
     })
 };
 

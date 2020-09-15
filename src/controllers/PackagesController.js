@@ -1,4 +1,7 @@
+const { buildPaginate } = require('../utils/paginationResponse');
+const { buildMessage } = require('../utils/buildMessage');
 const knex = require('../database/knex')
+const uuid = require('uuid')
 
 class PackagesController {
 
@@ -23,18 +26,7 @@ class PackagesController {
                     .offset(offset)
                     .select('*')
 
-
-            const packagesCount = await model()
-                .count();
-    
-            const packagesCountN = packagesCount[0]
-                && packagesCount[0]['count(*)']
-        
-            const paginate = [{
-                'page': pageNumber, 
-                'itensFound' : packagesCountN,
-                'totalPages': Math.ceil(packagesCount / limitNumber) || 0
-            }]
+            const paginate = await buildPaginate(pageNumber, model, limitNumber);
 
             return res.status(200).json({
                 data: packages,
@@ -42,58 +34,50 @@ class PackagesController {
             })
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
     async createPackage (req, res) {
         try {
-            const body = req.body;
+            const pkg = req.body || {};
 
-            if (!body.name) {
-                return res.send(400).json({
-                    message: 'O nome é um atributo obrtigatório'
-                });
+            if (!pkg.name) {
+                return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
             }
 
-            const id = await knex('Packages')
-                .insert(body);
+            delete pkg.is_published;
+            pkg.id = uuid.v4();
 
-            return res.status(201).json({
-                message: 'Package criada com sucesso',
-                id: id.pop()
-            })
+            await knex('Packages')
+                .insert(pkg);
+
+            return res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
     async updatePackage (req, res) {
         try {
             const { id } = req.params;
-            const body = req.body;
+            const pkg = req.body || {};
 
-            console.log(req.params, id)
+            if (!pkg.name) {
+                return res.send(400).json(buildMessage('O nome é um atributo obrigatório'));
+            }
+
+            delete pkg.is_published;
 
             await knex('Packages')
                 .where('id', id)
-                .update(body)
+                .update(pkg)
 
-
-            return res.status(200).json({
-                message: 'Package modificada com sucesso',
-                id
-            })
+            return res.status(200).json(buildMessage('Package modificado com sucesso', id));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 
@@ -105,15 +89,28 @@ class PackagesController {
                 .where('id', id)
                 .del()
 
-            return res.status(204).json({
-                message: 'Package deletada com sucesso',
-                id
-            })
+            return res.status(204).json(buildMessage('Package deletada com sucesso', { id }));
         } catch (error) {
             console.log(error)
-            return res.status(500).json({
-                message: error
-            }) 
+            return res.status(500).json(buildMessage(error.message));
+        }
+    }
+
+    async publishPackage(req, res) {
+        try {
+            const { id } = req.params;
+
+            const pkg = await knex('Packages')
+                .where('id', id)
+                .update({ is_published: true })
+
+            // TODO: customizar todos os pacotes comprados!
+            // Customizer.AllPurchasesByPackage(pkg);
+
+            return res.status(200).json(buildMessage('Package publicada com sucesso'));
+        } catch (error) {
+            console.log(error)
+            return res.status(500).json(buildMessage(error.message));
         }
     }
 }

@@ -1,7 +1,7 @@
 
 exports.up = function(knex) {
     return knex.schema.createTable('Customers', (table)=>{
-        table.increments('id');
+        table.uuid('id').primary();
         table.text('name');
         table.text('email');
         table.text('phone');
@@ -9,7 +9,8 @@ exports.up = function(knex) {
         table.text('custom_name');
         table.text('custom_phone');
         table.integer('loja_integrada_purchase_id').notNullable().unsigned();
-        table.timestamps();
+        table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
+        table.dateTime('updated_at').defaultTo(knex.raw('NULL ON UPDATE CURRENT_TIMESTAMP'))
     });
 };
 
