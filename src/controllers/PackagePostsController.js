@@ -83,8 +83,7 @@ class PackagePostsControllers {
                 });
             }
 
-            await knex('Package_posts')
-                .insert(body);
+            await knex('Package_posts').insert(body);
 
             return res.status(200).json({
                 message: 'Posts criado com sucesso'
