@@ -1,16 +1,17 @@
 version: "3.1"
 services:
   app:
-    image: node:10.20-alpine3.11
+    build: .
     container_name: app
     working_dir: /opt/app
     volumes:
       - .:/opt/app
+      - /opt/app/node_modules
     depends_on:
       - mysql
     ports:
       - "3336:3336"
-    entrypoint: "npm run dev"
+    command: "npm run dev"
     env_file: .env
     environment:
       "NODE_ENV": "development"
