@@ -6,7 +6,7 @@ const PackagePostValidator = require('../validator/PackagePostValidator');
 const S3 = require('../services/s3')
 
 function getPackagePostPathOfS3(packageId, postId) {
-    return `/packages/${packageId}/posts/${postId}`;
+    return `packages/${packageId}/posts/${postId}`;
 }
 
 async function generateUrlToUpload(packageId) {
