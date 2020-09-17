@@ -8,6 +8,7 @@ const knex = require('./src/database/knex')
 const jwt = require('jsonwebtoken')
 // const busboy = require('connect-busboy');
 // app.use(busboy());
+const cors = require('cors');
 
 const token = jwt.sign({
     id: 38,
@@ -16,9 +17,10 @@ const token = jwt.sign({
 
 console.log(token)
 
-//factories.populateDatabase();
+// factories.populateDatabase();
 app.use(express.json())
 
+app.use(cors())
 app.use(routes)
 /*
 knex.migrate.rollback(null, true)
