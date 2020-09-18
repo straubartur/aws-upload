@@ -10,7 +10,7 @@ const PackagePost = Joi.object({
     coordinate_y: Joi.string().required()
 });
 
-const PackagePostList = Joi.array().items(PackagePost);
+const PackagePostList = Joi.array().items(PackagePost).min(1);
 
 module.exports = {
     PackagePost,
