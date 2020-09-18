@@ -24,7 +24,7 @@ class Repository {
     }
 
     deleteById(id) {
-        return this.getModel().where('id', id).update({is_removed: true});
+        return this.getModel().where('id', id).update({is_removed: true, removed_at: knex.fn.now()});
     }
 
     findById(id, select = '*') {
