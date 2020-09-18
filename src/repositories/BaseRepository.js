@@ -16,6 +16,12 @@ class Repository {
     }
 
     updateById(id, data) {
+        delete data.id;
+        delete data.is_removed;
+        delete data.created_at;
+        delete data.updated_at;
+        delete data.removed_at;
+
         return this.getModel().where('id', id).update(data);
     }
 
