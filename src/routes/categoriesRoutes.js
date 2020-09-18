@@ -5,10 +5,10 @@ const authMiddleware = require('../middlewares/Auth')
 
 categoriesRoutes.use(authMiddleware)
 
-categoriesRoutes.get('/', CategoriesController.getCategories);
-categoriesRoutes.get('/:id', CategoriesController.getCategories)
-categoriesRoutes.put('/:id', CategoriesController.updateCategories)
-categoriesRoutes.delete('/:id', CategoriesController.deleteCategories)
-categoriesRoutes.post('/', CategoriesController.createCategories)
+categoriesRoutes.get('/', CategoriesController.getCategory);
+categoriesRoutes.get('/:id', CategoriesController.getCategory)
+categoriesRoutes.put('/:id', CategoriesController.updateCategory)
+categoriesRoutes.delete('/:id', CategoriesController.deleteCategory)
+categoriesRoutes.post('/', CategoriesController.createCategory)
 
 module.exports = categoriesRoutes;
