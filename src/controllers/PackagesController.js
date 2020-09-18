@@ -1,118 +1,93 @@
-const { buildPaginate } = require('../utils/paginationResponse');
 const { buildMessage } = require('../utils/buildMessage');
-const knex = require('../database/knex')
+const packageRepository = require('../repositories/PackagesRepository');
 const uuid = require('uuid')
 
-class PackagesController {
+function getPackages (req, res) {
+    const { id } = req.params
+    const { limit, page } = req.query;
 
-    async getPackages (req, res) {
-        const { id } = req.params
-        const { limit, page } = req.query;
-        try {
-            const limitNumber = Number(limit || '10');
-            const pageNumber = Number(page || '1');
-            const offset = (pageNumber - 1) * limitNumber;
-
-            const model = () => knex('Packages')
-                .where((queryBuilder) => {
-                    if(id) {
-                        queryBuilder.where('id', id) 
-                    }
-                });
-
-
-            const packages = await model()
-                    .limit(limitNumber)
-                    .offset(offset)
-                    .select('*')
-
-            const paginate = await buildPaginate(pageNumber, model, limitNumber);
-
-            return res.status(200).json({
-                data: packages,
-                paginate
-            })
-        } catch (error) {
-            console.log(error)
-            return res.status(500).json(buildMessage(error.message));
+    const where = (queryBuilder) => {
+        if(id) {
+            queryBuilder.where('id', id) 
         }
+    };
+
+    packageRepository.find(where, '*', { limit, page })
+        .then(result => res.status(200).json(result))
+        .catch(error => {
+            console.log(error)
+            res.status(500).json(buildMessage(error.message));
+        });
+}
+
+function createPackage (req, res) {
+    const pkg = req.body || {};
+
+    if (!pkg.name) {
+        return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
     }
 
-    async createPackage (req, res) {
-        try {
-            const pkg = req.body || {};
+    delete pkg.is_published;
+    pkg.id = uuid.v4();
 
-            if (!pkg.name) {
-                return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
-            }
-
-            delete pkg.is_published;
-            pkg.id = uuid.v4();
-
-            await knex('Packages')
-                .insert(pkg);
-
-            return res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id }));
-        } catch (error) {
+    packageRepository.create(pkg)
+        .then(() => res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id })))
+        .catch(error => {
             console.log(error)
-            return res.status(500).json(buildMessage(error.message));
-        }
+            res.status(500).json(buildMessage(error.message));
+        });
+}
+
+function updatePackage (req, res) {
+    const { id } = req.params;
+    const pkg = req.body || {};
+
+    if (!pkg.name) {
+        return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
     }
 
-    async updatePackage (req, res) {
-        try {
-            const { id } = req.params;
-            const pkg = req.body || {};
+    delete pkg.is_published;
 
-            if (!pkg.name) {
-                return res.send(400).json(buildMessage('O nome é um atributo obrigatório'));
-            }
-
-            delete pkg.is_published;
-
-            await knex('Packages')
-                .where('id', id)
-                .update(pkg)
-
-            return res.status(200).json(buildMessage('Package modificado com sucesso', id));
-        } catch (error) {
+    packageRepository.updateById(id, pkg)
+        .then(() => res.status(200).json(buildMessage('Package modificado com sucesso', { id })))
+        .catch(error => {
             console.log(error)
-            return res.status(500).json(buildMessage(error.message));
-        }
-    }
+            res.status(500).json(buildMessage(error.message));
+        });
+}
 
-    async deletePackage (req, res) {
-        try {
-            const { id } = req.params;
-
-            await knex('Packages')
-                .where('id', id)
-                .del()
-
-            return res.status(204).json(buildMessage('Package deletada com sucesso', { id }));
-        } catch (error) {
+function deletePackage (req, res) {
+    const { id } = req.params;
+    
+    packageRepository.deleteById(id)
+        .then(() => res.status(204).json(buildMessage('Package deletado com sucesso', { id })))
+        .catch(error => {
             console.log(error)
-            return res.status(500).json(buildMessage(error.message));
-        }
-    }
+            res.status(500).json(buildMessage(error.message));
+        });
+}
 
-    async publishPackage(req, res) {
-        try {
-            const { id } = req.params;
+function publishPackage(req, res) {
+    const { id } = req.params;
 
-            const pkg = await knex('Packages')
-                .where('id', id)
-                .update({ is_published: true })
+    packageRepository.updateById(id, { is_published: true })
+        .then(() => {
 
             // TODO: customizar todos os pacotes comprados!
             // Customizer.AllPurchasesByPackage(pkg);
 
-            return res.status(200).json(buildMessage('Package publicada com sucesso'));
-        } catch (error) {
+            res.status(200).json(buildMessage('Package publicado com sucesso', { id }));
+        })
+        .catch(error => {
             console.log(error)
-            return res.status(500).json(buildMessage(error.message));
-        }
-    }
+            res.status(500).json(buildMessage(error.message));
+        });
 }
 
-module.exports = new PackagesController();
+module.exports = {
+    getPackages,
+    createPackage,
+    updatePackage,
+    deletePackage,
+    publishPackage
+};
