@@ -54,7 +54,7 @@ exports.seed = function (knex) {
                 storyPosts.push({
                     id: uuid.v4(),
                     package_id: package.id,
-                    category_id: feed_category.id,
+                    category_id: story_category.id,
                     name: `Imagem ${i + 1}`,
                     aws_path: 'packages/d1727db1-fa0c-40ec-b9e9-c3814740a230/posts/92dd9938-8e78-48ae-a4b3-d97d305e3947',
                     coordinate_x: 10,
