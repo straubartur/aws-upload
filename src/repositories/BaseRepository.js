@@ -16,6 +16,12 @@ class Repository {
     }
 
     updateById(id, data) {
+        delete data.id;
+        delete data.is_removed;
+        delete data.created_at;
+        delete data.updated_at;
+        delete data.removed_at;
+
         return this.getModel().where('id', id).update(data);
     }
 
@@ -36,8 +42,11 @@ class Repository {
     }
 
     async find(where = NOOP, select = '*', options) {
-        const optionsDefault = { pagination: true };
-        const { pagination, limit, page } = {...optionsDefault, ...options};
+        const optionsDefault = {
+            pagination: true,
+            orderBy: [{ column: 'created_at', order: 'desc' }]
+        };
+        const { pagination, limit, page, orderBy } = {...optionsDefault, ...options};
         const model = () => this.getModel().where(where);
 
         if (pagination) {
@@ -47,7 +56,8 @@ class Repository {
             const data = await model()
                 .limit(limitPerPage)
                 .offset(offset)
-                .select(select);
+                .select(select)
+                .orderBy(orderBy);
 
             const modelCount = await model().count()
             const itensFound = modelCount && modelCount[0] && modelCount[0]['count(*)'];
@@ -61,7 +71,7 @@ class Repository {
                 }
             }
         } else {
-            const data = await model().select(select);
+            const data = await model().select(select).orderBy(orderBy);
             return { data };
         }
     }

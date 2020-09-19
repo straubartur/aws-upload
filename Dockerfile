@@ -6,4 +6,6 @@ COPY . /opt/app
 
 RUN npm install
 
+RUN npm install knex -g
+
 CMD "npm start"
