@@ -64,7 +64,7 @@ function deletePurchases (req, res) {
 function getGallery (req, res) {
     const { id } = req.params
     
-    purchasesRepository.findById(id)
+    purchasesRepository.getGallery(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
