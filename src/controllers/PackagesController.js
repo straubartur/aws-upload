@@ -1,18 +1,21 @@
 const { buildMessage } = require('../utils/buildMessage');
-const packageRepository = require('../repositories/PackagesRepository');
-const uuid = require('uuid')
+const packagesService = require('../services/PackagesService');
 
 function getPackages (req, res) {
-    const { id } = req.params
     const { limit, page } = req.query;
 
-    const where = (queryBuilder) => {
-        if(id) {
-            queryBuilder.where('id', id) 
-        }
-    };
+    packagesService.find(undefined, '*', { limit, page })
+        .then(result => res.status(200).json(result))
+        .catch(error => {
+            console.log(error)
+            res.status(500).json(buildMessage(error.message));
+        });
+}
 
-    packageRepository.find(where, '*', { limit, page })
+function getPackageById(req, res) {
+    const { id } = req.params;
+
+    packagesService.findById(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
@@ -21,17 +24,14 @@ function getPackages (req, res) {
 }
 
 function createPackage (req, res) {
-    const pkg = req.body || {};
+    const newPackage = req.body || {};
 
-    if (!pkg.name) {
+    if (!newPackage.name) {
         return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
     }
 
-    delete pkg.is_published;
-    pkg.id = uuid.v4();
-
-    packageRepository.create(pkg)
-        .then(() => res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id })))
+    packagesService.create(newPackage)
+        .then((pkg) => res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id })))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
@@ -46,9 +46,7 @@ function updatePackage (req, res) {
         return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
     }
 
-    delete pkg.is_published;
-
-    packageRepository.updateById(id, pkg)
+    packagesService.updateById(id, pkg)
         .then(() => res.status(200).json(buildMessage('Package modificado com sucesso', { id })))
         .catch(error => {
             console.log(error)
@@ -59,7 +57,7 @@ function updatePackage (req, res) {
 function deletePackage (req, res) {
     const { id } = req.params;
     
-    packageRepository.deleteById(id)
+    packagesService.deleteById(id)
         .then(() => res.status(204).json(buildMessage('Package deletado com sucesso', { id })))
         .catch(error => {
             console.log(error)
@@ -70,14 +68,8 @@ function deletePackage (req, res) {
 function publishPackage(req, res) {
     const { id } = req.params;
 
-    packageRepository.updateById(id, { is_published: true })
-        .then(() => {
-
-            // TODO: customizar todos os pacotes comprados!
-            // Customizer.AllPurchasesByPackage(pkg);
-
-            res.status(200).json(buildMessage('Package publicado com sucesso', { id }));
-        })
+    packagesService.publishPackage(id)
+        .then(() => res.status(200).json(buildMessage('Package publicado com sucesso', { id })))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
@@ -86,6 +78,7 @@ function publishPackage(req, res) {
 
 module.exports = {
     getPackages,
+    getPackageById,
     createPackage,
     updatePackage,
     deletePackage,

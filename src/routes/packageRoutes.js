@@ -7,7 +7,7 @@ const authMiddleware = require('../middlewares/Auth')
 packageRoutes.use(authMiddleware)
 
 packageRoutes.get('/', PackagesController.getPackages);
-packageRoutes.get('/:id', PackagesController.getPackages)
+packageRoutes.get('/:id', PackagesController.getPackageById)
 packageRoutes.post('/', PackagesController.createPackage)
 packageRoutes.put('/:id', PackagesController.updatePackage)
 packageRoutes.delete('/:id', PackagesController.deletePackage)
