@@ -3,7 +3,7 @@ const { buildMessage } = require('../utils/buildMessage');
 const PackagePostValidator = require('../validator/PackagePostValidator');
 const packagePostsRepository = require('../repositories/PackagePostsRepository');
 const packageRepository = require('../repositories/PackagesRepository');
-const S3 = require('../services/s3')
+const S3 = require('../externals/s3');
 
 function getPackagePostPathOfS3(packageId, postId) {
     return `packages/${packageId}/posts/${postId}`;
