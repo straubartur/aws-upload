@@ -82,7 +82,6 @@ function createPurchaseWithLogo (newPurchase) {
             await purchasesRepository.create(newPurchase);
 
             setTimeout(updatePurchaseByLojaIntegrada, 0, newPurchase.loja_integrada_pedido_id);
-            setTimeout(customersService.updateCustomerInfoByPedidoId, 0, );
 
             return newPurchase;
         });
