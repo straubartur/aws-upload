@@ -47,10 +47,35 @@ function createPosts(req, res) {
         });
 }
 
-function deletePost(req, res) {
-    const { id, packageId } = req.params;
+function updatePosts(req, res) {
+    const { packageId } = req.params;
+    const posts = req.body || [];
 
-    packagePostsService.deleteById(id, packageId)
+    const { error } = PackagePostValidator.PackagePostList.validate(posts);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
+
+    packagePostsService.updatePosts(posts, packageId)
+        .then(() => res.status(200).json(buildMessage('Posts modificados com sucesso')))
+        .catch(error => {
+            console.log(error)
+            res.status(500).json(buildMessage(error.message));
+        });
+}
+
+function deletePosts(req, res) {
+    const { packageId } = req.params;
+    const posts = req.body || [];
+
+    const { error } = PackagePostValidator.PackagePostList.validate(posts);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
+
+    packagePostsService.deletePosts(posts, packageId)
         .then(() => res.sendStatus(204))
         .catch(error => {
             console.log(error)
@@ -78,6 +103,7 @@ module.exports = {
     getPosts,
     getPostById,
     createPosts,
-    deletePost,
+    updatePosts,
+    deletePosts,
     generateUrls
 };

@@ -7,7 +7,11 @@ const PackagePost = Joi.object({
     name: Joi.string().required(),
     aws_path: Joi.string().required(),
     coordinate_x:  Joi.string().required(),
-    coordinate_y: Joi.string().required()
+    coordinate_y: Joi.string().required(),
+    created_at: Joi.date().iso().allow(null),
+    updated_at: Joi.date().iso().allow(null),
+    is_removed: Joi.valid(0, 1),
+    removed_at: Joi.date().iso().allow(null)
 });
 
 const PackagePostList = Joi.array().items(PackagePost).min(1);
