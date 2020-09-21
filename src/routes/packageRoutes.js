@@ -7,14 +7,14 @@ const authMiddleware = require('../middlewares/Auth')
 packageRoutes.use(authMiddleware)
 
 packageRoutes.get('/', PackagesController.getPackages);
-packageRoutes.get('/:id', PackagesController.getPackages)
+packageRoutes.get('/:id', PackagesController.getPackageById)
 packageRoutes.post('/', PackagesController.createPackage)
 packageRoutes.put('/:id', PackagesController.updatePackage)
 packageRoutes.delete('/:id', PackagesController.deletePackage)
 packageRoutes.post('/publish/:id', PackagesController.publishPackage)
 
 packageRoutes.get('/:packageId/posts', PackagePostsController.getPosts);
-packageRoutes.get('/:packageId/posts/:id', PackagePostsController.getPosts)
+packageRoutes.get('/:packageId/posts/:id', PackagePostsController.getPostById)
 packageRoutes.post('/:packageId/posts', PackagePostsController.createPosts)
 packageRoutes.delete('/:packageId/posts/:id', PackagePostsController.deletePost)
 

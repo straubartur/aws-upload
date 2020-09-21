@@ -1,18 +1,21 @@
-const uuid = require('uuid')
-const categoriesRepository = require('../repositories/CategoriesRepository');
+const categoriesService = require('../services/CategoriesService');
 const { buildMessage } = require('../utils/buildMessage');
 
-function getCategory(req, res) {
-    const { id } = req.params
+function getCategories(req, res) {
     const { limit, page } = req.query;
 
-    const where = (queryBuilder) => {
-        if(id) {
-            queryBuilder.where('id', id) 
-        }
-    };
+    categoriesService.find(undefined, '*', { limit, page })
+        .then(result => res.status(200).json(result))
+        .catch(error => {
+            console.log(error)
+            res.status(500).json(buildMessage(error.message));
+        });
+}
 
-    categoriesRepository.find(where, '*', { limit, page })
+function getCategoryById(req, res) {
+    const { id } = req.params;
+
+    categoriesService.findById(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
@@ -21,19 +24,17 @@ function getCategory(req, res) {
 }
 
 function createCategory(req, res) {
-    const category = req.body || {};
+    const newCategory = req.body || {};
 
-    if (!category.name) {
+    if (!newCategory.name) {
         return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
     }
-    if (!category.description) {
+    if (!newCategory.description) {
         return res.status(400).json(buildMessage('A descrição é um atributo obrigatório'));
     }
 
-    category.id = uuid.v4();
-
-    categoriesRepository.create(category)
-        .then(() => res.status(201).json(buildMessage('Categoria criada com sucesso', { id: category.id })))
+    categoriesService.create(newCategory)
+        .then(category => res.status(201).json(buildMessage('Categoria criada com sucesso', { id: category.id })))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
@@ -51,7 +52,7 @@ function updateCategory(req, res) {
         return res.status(400).json(buildMessage('A descrição é um atributo obrigatório'));
     }
 
-    categoriesRepository.updateById(id, category)
+    categoriesService.updateById(id, category)
         .then(() => res.status(200).json(buildMessage('Categoria modificada com sucesso', { id })))
         .catch(error => {
             console.log(error)
@@ -62,7 +63,7 @@ function updateCategory(req, res) {
 function deleteCategory(req, res) {
     const { id } = req.params;
 
-    categoriesRepository.deleteById(id)
+    categoriesService.deleteById(id)
         .then(() => res.sendStatus(204))
         .catch(error => {
             console.log(error)
@@ -71,7 +72,8 @@ function deleteCategory(req, res) {
 }
 
 module.exports = {
-    getCategory,
+    getCategories,
+    getCategoryById,
     createCategory,
     updateCategory,
     deleteCategory
