@@ -7,8 +7,26 @@ function create(newPost) {
     return packagePostsRepository.create(newPost);
 }
 
-function updateById(id, post) {
-    return packagePostsRepository.updateById(id, post);
+function updatePosts(posts, package_id) {
+    return Promise.all(posts.map(post => updateById(post.id, post, package_id)));
+}
+
+function updateById(id, newPost, package_id) {
+    return findById(id, package_id)
+        .then((post) => {
+            if (!post) {
+                throw new Error(`Post[${id}] não encontrado`);
+            }
+
+            delete newPost.aws_path;
+            delete newPost.package_id;
+
+            return packagePostsRepository.updateById(id, newPost);
+        });
+}
+
+function deletePosts(posts, package_id) {
+    return Promise.all(posts.map(post => deleteById(post.id, package_id)));
 }
 
 function deleteById(id, package_id) {
@@ -60,7 +78,9 @@ function generateUrlToPostUpload(packageId, quantity) {
 
 module.exports = {
     create,
+    updatePosts,
     updateById,
+    deletePosts,
     deleteById,
     find,
     findById,
