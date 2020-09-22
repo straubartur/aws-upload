@@ -33,8 +33,9 @@ knex.migrate.rollback(null, true)
 */
 
 function startServer() {
-    app.listen(3336, ()=>{
-        console.log('Server Online, port: 3336');
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        console.log(`Server Online, port: ${port}`);
     });
 }
 
