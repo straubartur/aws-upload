@@ -35,7 +35,14 @@ function find(where, select, options) {
 }
 
 function findById(id) {
-    return packagesRepository.findById(id);
+    return packagesRepository.findById(id)
+        .then(async pkg => {
+            if (pkg) {
+                const { data } = await packagePostsService.find({ package_id: pkg.id }, '*', { pagination: false });
+                pkg.posts = data || [];
+            }
+            return pkg;
+        });
 }
 
 function publishPackage(id) {
