@@ -53,27 +53,11 @@ function getPackagePostPathOfS3(packageId, postId) {
     return `packages/${packageId}/posts/${postId}`;
 }
 
-async function generateUrl(packageId) {
+async function generateUrlToPostUpload(packageId) {
     const id = uuid.v4();
     const aws_path = getPackagePostPathOfS3(packageId, id);
     const uploadURL = await S3.uploadFileBySignedURL(aws_path);
     return { id, aws_path, uploadURL };
-}
-
-function generateUrlToPostUpload(packageId, quantity) {
-    return packagesService.findById(packageId)
-        .then(pkg => {
-            if (!pkg) {
-                throw new Error(`Package[${packageId}] não encontrado`);
-            }
-
-            const generateUrls = [];
-            for (let i = 0; i < Number(quantity); i++) {
-                generateUrls.push(generateUrl(packageId));
-            }
-
-            return Promise.all(generateUrls);
-        });
 }
 
 module.exports = {
