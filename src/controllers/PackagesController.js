@@ -1,5 +1,6 @@
 const { buildMessage } = require('../utils/buildMessage');
 const packagesService = require('../services/PackagesService');
+const packageValidator = require('../validator/PackageValidator')
 
 function getPackages (req, res) {
     const { limit, page } = req.query;
@@ -23,31 +24,17 @@ function getPackageById(req, res) {
         });
 }
 
-function createPackage (req, res) {
-    const newPackage = req.body || {};
+function savePackage (req, res) {
+    const package = req.body || {};
 
-    if (!newPackage.name) {
-        return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
+    const { error } = packageValidator.Package.validate(package);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
     }
 
-    packagesService.create(newPackage)
-        .then((pkg) => res.status(201).json(buildMessage('Package criado com sucesso', { id: pkg.id })))
-        .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
-        });
-}
-
-function updatePackage (req, res) {
-    const { id } = req.params;
-    const pkg = req.body || {};
-
-    if (!pkg.name) {
-        return res.status(400).json(buildMessage('O nome é um atributo obrigatório'));
-    }
-
-    packagesService.updateById(id, pkg)
-        .then(() => res.status(200).json(buildMessage('Package modificado com sucesso', { id })))
+    packagesService.save(package)
+        .then(() => res.status(201).json(buildMessage('Package salvo com sucesso')))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
@@ -96,8 +83,7 @@ function generateUrls(req, res) {
 module.exports = {
     getPackages,
     getPackageById,
-    createPackage,
-    updatePackage,
+    savePackage,
     deletePackage,
     publishPackage,
     generateUrls

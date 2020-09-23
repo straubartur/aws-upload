@@ -8,8 +8,7 @@ packageRoutes.use(authMiddleware)
 
 packageRoutes.get('/', PackagesController.getPackages);
 packageRoutes.get('/:id', PackagesController.getPackageById)
-packageRoutes.post('/', PackagesController.createPackage)
-packageRoutes.put('/:id', PackagesController.updatePackage)
+packageRoutes.post('/', PackagesController.savePackage)
 packageRoutes.delete('/:id', PackagesController.deletePackage)
 packageRoutes.post('/publish/:id', PackagesController.publishPackage)
 

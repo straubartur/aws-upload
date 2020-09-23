@@ -2,8 +2,19 @@ const uuid = require('uuid');
 const packagesRepository = require('../repositories/PackagesRepository');
 const packagePostsService = require('../services/PackagePostsService');
 
+async function save(pkg) {
+    const { id, name, description } = pkg;
+    const oldPackage = await findById(id);
+    if (oldPackage) {
+        await updateById(oldPackage.id, { name, description });
+    } else {
+        await create({ id, name, description });
+    }
+
+    await packagePostsService.savePosts(pkg.posts, id);
+}
+
 function create(newPackage) {
-    newPackage.id = uuid.v4();
     delete newPackage.is_published;
 
     return packagesRepository.create(newPackage)
@@ -52,6 +63,7 @@ module.exports = {
     create,
     updateById,
     deleteById,
+    save,
     find,
     findById,
     publishPackage,

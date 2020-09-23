@@ -1,7 +1,28 @@
 const uuid = require('uuid');
 const packagePostsRepository = require('../repositories/PackagePostsRepository');
-const packagesService = require('./PackagesService');
 const S3 = require('../externals/s3');
+
+function savePosts(posts, package_id) {
+    return Promise.all(posts.map(post => saveOrCreate(post, package_id)));
+}
+
+function saveOrCreate(post, package_id) {
+    return findById(post.id, package_id)
+        .then((oldPost) => {
+            if (!oldPost) {
+                return packagePostsRepository.create(post);
+            }
+
+            if (post.is_removed) {
+                return packagePostsRepository.deleteById(oldPost.id);
+            }
+
+            delete post.aws_path;
+            delete post.package_id;
+
+            return packagePostsRepository.updateById(oldPost.id, post);
+        });
+}
 
 function create(newPost) {
     return packagePostsRepository.create(newPost);
@@ -61,6 +82,7 @@ async function generateUrlToPostUpload(packageId) {
 }
 
 module.exports = {
+    savePosts,
     create,
     updatePosts,
     updateById,
