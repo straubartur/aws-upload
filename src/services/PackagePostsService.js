@@ -1,7 +1,28 @@
 const uuid = require('uuid');
 const packagePostsRepository = require('../repositories/PackagePostsRepository');
-const packagesService = require('./PackagesService');
 const S3 = require('../externals/s3');
+
+function savePosts(posts, package_id) {
+    return Promise.all(posts.map(post => saveOrCreate(post, package_id)));
+}
+
+function saveOrCreate(post, package_id) {
+    return findById(post.id, package_id)
+        .then((oldPost) => {
+            if (!oldPost) {
+                return packagePostsRepository.create(post);
+            }
+
+            if (post.is_removed) {
+                return packagePostsRepository.deleteById(oldPost.id);
+            }
+
+            delete post.aws_path;
+            delete post.package_id;
+
+            return packagePostsRepository.updateById(oldPost.id, post);
+        });
+}
 
 function create(newPost) {
     return packagePostsRepository.create(newPost);
@@ -53,30 +74,15 @@ function getPackagePostPathOfS3(packageId, postId) {
     return `packages/${packageId}/posts/${postId}`;
 }
 
-async function generateUrl(packageId) {
+async function generateUrlToPostUpload(packageId) {
     const id = uuid.v4();
     const aws_path = getPackagePostPathOfS3(packageId, id);
     const uploadURL = await S3.uploadFileBySignedURL(aws_path);
     return { id, aws_path, uploadURL };
 }
 
-function generateUrlToPostUpload(packageId, quantity) {
-    return packagesService.findById(packageId)
-        .then(pkg => {
-            if (!pkg) {
-                throw new Error(`Package[${packageId}] não encontrado`);
-            }
-
-            const generateUrls = [];
-            for (let i = 0; i < Number(quantity); i++) {
-                generateUrls.push(generateUrl(packageId));
-            }
-
-            return Promise.all(generateUrls);
-        });
-}
-
 module.exports = {
+    savePosts,
     create,
     updatePosts,
     updateById,

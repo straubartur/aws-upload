@@ -14,9 +14,6 @@ const PackagePost = Joi.object({
     removed_at: Joi.date().iso().allow(null)
 });
 
-const PackagePostList = Joi.array().items(PackagePost).min(1);
-
 module.exports = {
-    PackagePost,
-    PackagePostList
+    PackagePost
 }

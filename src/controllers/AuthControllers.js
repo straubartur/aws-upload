@@ -15,8 +15,8 @@ function login(req, res) {
             }
 
             bcrypt.compare(password, user.password, function(err, result) {
-                if (err) {
-                    return res.status(403).json(buildMessage('Usuário não cadastrado na plataforma'));
+                if (err || !result) {
+                    return res.status(403).json(buildMessage('Usuário ou senha incorretos'));
                 }
 
                 const token =  jwt.sign({ id: user.id }, process.env.AUTH_CONFIG, { expiresIn: 600 })

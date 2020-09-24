@@ -1,9 +1,21 @@
-const packagesRepository = require('../repositories/PackagesRepository');
 const uuid = require('uuid');
+const packagesRepository = require('../repositories/PackagesRepository');
+const packagePostsService = require('../services/PackagePostsService');
+
+async function save(pkg) {
+    const { id, name, description } = pkg;
+    const oldPackage = await findById(id);
+    if (oldPackage) {
+        await updateById(oldPackage.id, { name, description });
+    } else {
+        await create({ id, name, description });
+    }
+
+    await packagePostsService.savePosts(pkg.posts, id);
+}
 
 function create(newPackage) {
-    newPackage.id = uuid.v4();
-    delete pkg.is_published;
+    delete newPackage.is_published;
 
     return packagesRepository.create(newPackage)
         .then(() => newPackage);
@@ -23,7 +35,14 @@ function find(where, select, options) {
 }
 
 function findById(id) {
-    return packagesRepository.findById(id);
+    return packagesRepository.findById(id)
+        .then(async pkg => {
+            if (pkg) {
+                const { data } = await packagePostsService.find({ package_id: pkg.id }, '*', { pagination: false });
+                pkg.posts = data || [];
+            }
+            return pkg;
+        });
 }
 
 function publishPackage(id) {
@@ -35,11 +54,25 @@ function publishPackage(id) {
         });
 }
 
+function generateUrls(pkgId, quantity) {
+    const packageId = pkgId ? pkgId : uuid.v4();
+    
+    const generateUrls = [];
+    for (let i = 0; i < Number(quantity); i++) {
+        generateUrls.push(packagePostsService.generateUrlToPostUpload(packageId));
+    }
+
+    return Promise.all(generateUrls)
+        .then(posts => ({ id: packageId, posts }));
+}
+
 module.exports = {
     create,
     updateById,
     deleteById,
+    save,
     find,
     findById,
-    publishPackage
+    publishPackage,
+    generateUrls
 };
