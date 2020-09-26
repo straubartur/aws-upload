@@ -1,8 +1,9 @@
+const uuid = require('uuid');
 const purchasesRepository = require('../repositories/PurchasesRepository');
 const customersService = require('../services/CustomersService');
+const packagesService = require('../services/PackagesService');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
-const uuid = require('uuid');
 
 function throwIfExist(message) {
     return (result) => {
@@ -52,16 +53,58 @@ function findByLojaIntegradaPedidoId(loja_integrada_pedido_id) {
 }
 
 function getGallery(id) {
-    return purchasesRepository.find({ id, is_paid: true })
+    return purchasesRepository.findOne({ id, is_paid: true })
             .then(throwIfNotExist('Compra não encontrada!'))
             .then(async (purchase) => {
-                const posts = await purchasesRepository.getGalleryPosts(purchase.id)
+                const groupPosts = await getPostsGroupByCategories(purchase.id);
+                const customer = await customersService.findById(purchase.customer_id);
+                const package = await packagesService.findById(purchase.package_id);
 
                 return {
-                    purchase,
-                    posts
+                    purchase: {
+                        id: purchase.id,
+                        customer_id: purchase.customer_id,
+                        package_id: purchase.package_id,
+                        loja_integrada_pedido_id: purchase.loja_integrada_pedido_id,
+                    },
+                    customer: {
+                        id: customer.id,
+                        name: customer.name
+                    },
+                    package: {
+                        id: package.id,
+                        name: package.name,
+                        description: package.description
+                    },
+                    postsByCategory: groupPosts
                 }
             });
+}
+
+async function getPostsGroupByCategories(purchaseId) {
+    const posts = await purchasesRepository.getGalleryPosts(purchaseId)
+    const groupPosts = posts.reduce((group, post) => {
+        const category = group[post.category_id] || {
+            category: {
+                id: post.category_id,
+                name: post.category_name,
+                description: post.category_description
+            },
+            posts: []
+        };
+
+        category.posts.push({
+            id: post.id,
+            aws_path: post.aws_path,
+            thumbnail: post.thumbnail
+        });
+
+        group[post.category_id] = category;
+
+        return group;
+    }, {});
+
+    return groupPosts;
 }
 
 function getLogoPathOfS3(purchaseId) {

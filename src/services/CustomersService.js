@@ -44,6 +44,10 @@ function find(where, select, options) {
     return customersRepository.find(where, select, options);
 }
 
+function findById(id) {
+    return customersRepository.findById(id);
+}
+
 function findByLojaIntegradaClienteId(loja_integrada_cliente_id) {
     return loja_integrada_cliente_id ? customersRepository.findOne({ loja_integrada_cliente_id }) : Promise.resolve();
 }
@@ -57,6 +61,7 @@ module.exports = {
     updateById,
     deleteById,
     find,
+    findById,
     findByLojaIntegradaClienteId,
     findByEmail
 };
