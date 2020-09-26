@@ -12,7 +12,7 @@ packageRoutes.post('/', PackagesController.savePackage)
 packageRoutes.delete('/:id', PackagesController.deletePackage)
 packageRoutes.post('/publish/:id', PackagesController.publishPackage)
 
-packageRoutes.get('/generate-urls/:quantity', PackagesController.generateUrls);
+packageRoutes.post('/generate-urls', PackagesController.generateUrls);
 
 packageRoutes.get('/:packageId/posts', PackagePostsController.getPosts);
 packageRoutes.get('/:packageId/posts/:id', PackagePostsController.getPostById)

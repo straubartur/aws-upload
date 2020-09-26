@@ -65,7 +65,7 @@ function getGallery(id) {
 }
 
 function getLogoPathOfS3(purchaseId) {
-    return `purchases/${purchaseId}/logo`;
+    return `purchases/${purchaseId}/logo.png`;
 }
 
 async function generateUrlToLogoUpload() {
