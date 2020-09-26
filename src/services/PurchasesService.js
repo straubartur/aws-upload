@@ -76,7 +76,7 @@ function getGallery(id) {
                         name: package.name,
                         description: package.description
                     },
-                    imagesByCategory: groupPosts
+                    postsByCategory: groupPosts
                 }
             });
 }
