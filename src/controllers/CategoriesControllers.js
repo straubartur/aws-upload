@@ -2,9 +2,14 @@ const categoriesService = require('../services/CategoriesService');
 const { buildMessage } = require('../utils/buildMessage');
 
 function getCategories(req, res) {
-    const { limit, page } = req.query;
+    const { pagination, limit, page } = req.query;
+    const usePagination = pagination === 'false' ? false : true;
 
-    categoriesService.find(undefined, '*', { limit, page })
+    categoriesService.find(undefined, '*', {
+            pagination: usePagination,
+            limit,
+            page
+        })
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
