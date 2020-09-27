@@ -16,7 +16,7 @@ const rules = require('./purchase-rules')
  * @param { Purchase } purchase
  * @return { Promise<Boolean> }
  */
-async function validatePurchace (purchase) {
+async function validatePurchase (purchase) {
     const result = await rule({
         isValid: Boolean(purchase),
         data: purchase
