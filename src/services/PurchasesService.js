@@ -4,7 +4,7 @@ const customersService = require('../services/CustomersService');
 const packagesService = require('../services/PackagesService');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
-const { processByPurchase } = require('../externals/watermark');
+const { syncPurchasePosts } = require('../managers/purchase-manager');
 
 function throwIfExist(message) {
     return (result) => {
@@ -30,8 +30,7 @@ function create(purchase) {
     purchase.id = uuid.v4();
 
     return purchasesRepository.create(purchase)
-        // TODO: move it to correctly local
-        .then(() => setTimeout(processByPurchase, 0, purchase));
+        .then(() => setTimeout(syncPurchasePosts, 0, purchase));
 }
 
 function updateById(id, purchase) {
