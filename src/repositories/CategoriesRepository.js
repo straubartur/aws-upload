@@ -1,8 +1,8 @@
 const BaseRepository = require('./BaseRepository');
 
 class CategoriesRepository extends BaseRepository {
-    constructor() {
-        super('Categories');
+    constructor(trx) {
+        super('Categories', trx);
     }
 }
 
