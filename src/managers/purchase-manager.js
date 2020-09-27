@@ -37,7 +37,7 @@ async function validatePurchace (purchase) {
 async function rule (dataRule, fnValidate) {
     try {
         if (dataRule.isValid && typeof fnValidate === 'function') {
-            dataRule.isValid = await fnValidate(dataRule)
+            dataRule.isValid = Boolean(await fnValidate(dataRule.data))
         }
         return Promise.resolve(dataRule)
     } catch (_) {
