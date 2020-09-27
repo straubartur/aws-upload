@@ -1,101 +1,84 @@
 const uuid = require('uuid');
 const mime = require('mime-types');
-const packagePostsRepository = require('../repositories/PackagePostsRepository');
 const S3 = require('../externals/s3');
+const PackagePostsRepository = require('../repositories/PackagePostsRepository');
 
-function savePosts(posts, package_id) {
-    return Promise.all(posts.map(post => saveOrCreate(post, package_id)));
+class PackagePostsService extends PackagePostsRepository {
+    savePosts(posts, package_id) {
+        return Promise.all(posts.map(post => this.saveOrCreate(post, package_id)));
+    }
+
+    async saveOrCreate(post, package_id) {
+        const oldPost = await this.findById(post.id, package_id)
+
+        if (!oldPost && post.is_removed) {
+            return;
+        }
+
+        if (!oldPost) {
+            return this.create(post);
+        }
+
+        if (post.is_removed) {
+            return super.deleteById(oldPost.id);
+        }
+
+        delete post.aws_path;
+        delete post.package_id;
+
+        return super.updateById(oldPost.id, post);
+    }
+
+    updatePosts(posts, package_id) {
+        return Promise.all(posts.map(post => this.updateById(post.id, post, package_id)));
+    }
+
+    async updateById(id, newPost, package_id) {
+        const post = await this.findById(id, package_id)
+
+        if (!post) {
+            throw new Error(`Post[${id}] não encontrado`);
+        }
+
+        delete newPost.aws_path;
+        delete newPost.package_id;
+
+        return super.updateById(id, newPost);
+    }
+
+    deletePosts(posts, package_id) {
+        return Promise.all(posts.map(post => this.deleteById(post.id, package_id)));
+    }
+
+    async deleteById(id, package_id) {
+        const post = await this.findById(id, package_id)
+
+        if (!post) {
+            throw new Error(`Post[${id}] não encontrado`);
+        }
+
+        return super.deleteById(id);
+    }
+
+    findByPackageId(package_id, select = '*', options = { pagination: false }) {
+        return this.find({ package_id }, select, options);
+    }
+
+    findById(id, package_id) {
+        return this.findOne({ id, package_id });
+    }
+
+    getPackagePostPathOfS3(packageId, postId, extension) {
+        const ext = extension ? `.${extension}` : '';
+        return `packages/${packageId}/posts/${postId}${ext}`;
+    }
+
+    async generateUrlToPostUpload(packageId, contentType) {
+        const id = uuid.v4();
+        const aws_path = this.getPackagePostPathOfS3(packageId, id, mime.extension(contentType));
+        const uploadURL = await S3.uploadFileBySignedURL(aws_path);
+        return { id, aws_path, uploadURL };
+    }
 }
 
-function saveOrCreate(post, package_id) {
-    return findById(post.id, package_id)
-        .then((oldPost) => {
-            if (!oldPost) {
-                return packagePostsRepository.create(post);
-            }
-
-            if (post.is_removed) {
-                return packagePostsRepository.deleteById(oldPost.id);
-            }
-
-            delete post.aws_path;
-            delete post.package_id;
-
-            return packagePostsRepository.updateById(oldPost.id, post);
-        });
-}
-
-function create(newPost) {
-    return packagePostsRepository.create(newPost);
-}
-
-function updatePosts(posts, package_id) {
-    return Promise.all(posts.map(post => updateById(post.id, post, package_id)));
-}
-
-function updateById(id, newPost, package_id) {
-    return findById(id, package_id)
-        .then((post) => {
-            if (!post) {
-                throw new Error(`Post[${id}] não encontrado`);
-            }
-
-            delete newPost.aws_path;
-            delete newPost.package_id;
-
-            return packagePostsRepository.updateById(id, newPost);
-        });
-}
-
-function deletePosts(posts, package_id) {
-    return Promise.all(posts.map(post => deleteById(post.id, package_id)));
-}
-
-function deleteById(id, package_id) {
-    return findById(id, package_id)
-        .then((post) => {
-            if (!post) {
-                throw new Error(`Post[${id}] não encontrado`);
-            }
-
-            return packagePostsRepository.deleteById(id);
-        });
-}
-
-function find(where, select, options) {
-    return packagePostsRepository.find(where, select, options);
-}
-
-function findByPackageId(package_id, select = '*', options = { pagination: false }) {
-    return packagePostsRepository.find({ package_id }, select, options);
-}
-
-function findById(id, package_id) {
-    return packagePostsRepository.findOne({ id, package_id });
-}
-
-
-function getPackagePostPathOfS3(packageId, postId, extension) {
-    const ext = extension ? `.${extension}` : '';
-    return `packages/${packageId}/posts/${postId}${ext}`;
-}
-
-async function generateUrlToPostUpload(packageId, contentType) {
-    const id = uuid.v4();
-    const aws_path = getPackagePostPathOfS3(packageId, id, mime.extension(contentType));
-    const uploadURL = await S3.uploadFileBySignedURL(aws_path);
-    return { id, aws_path, uploadURL };
-}
-
-module.exports = {
-    savePosts,
-    create,
-    updatePosts,
-    updateById,
-    deletePosts,
-    deleteById,
-    find,
-    findById,
-    findByPackageId,
-    generateUrlToPostUpload
-};
+module.exports = PackagePostsService;
