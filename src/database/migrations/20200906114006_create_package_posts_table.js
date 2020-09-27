@@ -5,7 +5,6 @@ exports.up = function(knex) {
         table.uuid('package_id').notNullable();
         table.uuid('category_id').notNullable();
         table.text('name').notNullable();
-        table.string('watermark_status', 7)
         table.text('aws_path').notNullable();
         table.text('coordinate_x').notNullable();
         table.text('coordinate_y').notNullable();
