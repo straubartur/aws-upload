@@ -133,7 +133,7 @@ function getUrlDetails(url) {
  * Process the images by purchase
  * @param { Purchase } purchase - The puchase Object
  */
-function processByPurchase(purchase) {
+async function processByPurchase(purchase) {
     const requestBody = await buildProcessorBody(purchase)
     sendPackageToProcess([requestBody])
 }
