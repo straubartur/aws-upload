@@ -56,8 +56,8 @@ function publishPackage(id) {
 
 function generateUrls(pkgId, quantity) {
     const packageId = pkgId ? pkgId : uuid.v4();
-    
     const generateUrls = [];
+
     for (let i = 0; i < Number(quantity); i++) {
         generateUrls.push(packagePostsService.generateUrlToPostUpload(packageId));
     }
