@@ -38,7 +38,17 @@ const { findByPackageId } = require('../services/PackagePostsService')
 /**
  * @typedef Purchase
  * @property { String } id
+ * @property { String } customer_id
  * @property { String } package_id
+ * @property { String } loja_integrada_pedido_id
+ * @property { 0 | 1 } is_paid
+ * @property { 0 | 1 } is_removed
+ * @property { Date } cerated_at
+ * @property { Date } updated_at
+ * @property { Date } removed_at
+ * @property { String } custom_name
+ * @property { String } custom_phone
+ * @property { String } rank
  * @property { String } aws_logo_path
  */
 
