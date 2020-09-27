@@ -40,27 +40,24 @@ exports.seed = function (knex) {
         .then(() => {
             const feedPosts = [];
             const storyPosts = [];
-            for (let i = 0; i < 20; i++) {
                 feedPosts.push({
-                    id: uuid.v4(),
+                    id: 'd5471c65-9683-492a-98fa-954c4081917d',
                     package_id: package.id,
                     category_id: feed_category.id,
-                    name: `Imagem ${i + 1}`,
-                    aws_path: 'packages/d1727db1-fa0c-40ec-b9e9-c3814740a230/posts/92dd9938-8e78-48ae-a4b3-d97d305e3947',
-                    coordinate_x: 10,
-                    coordinate_y: 10
+                    name: `Feed 1`,
+                    aws_path: 'packages/58063780-ce39-4d0e-9640-1ad35f3ed40e/posts/d5471c65-9683-492a-98fa-954c4081917d.png',
+                    coordinate_x: 15,
+                    coordinate_y: 15
                 });
-
                 storyPosts.push({
-                    id: uuid.v4(),
+                    id: '21366721-5c4c-42fc-80e7-2991f3ff54b8',
                     package_id: package.id,
                     category_id: story_category.id,
-                    name: `Imagem ${i + 1}`,
-                    aws_path: 'packages/d1727db1-fa0c-40ec-b9e9-c3814740a230/posts/92dd9938-8e78-48ae-a4b3-d97d305e3947',
-                    coordinate_x: 10,
-                    coordinate_y: 10
+                    name: `Story 1`,
+                    aws_path: 'packages/58063780-ce39-4d0e-9640-1ad35f3ed40e/posts/21366721-5c4c-42fc-80e7-2991f3ff54b8.png',
+                    coordinate_x: 15,
+                    coordinate_y: 15
                 });
-            }
             return knex('Package_posts').insert([...feedPosts, ...storyPosts]);
         })
         .then(() => knex('Customers').insert(customer))
