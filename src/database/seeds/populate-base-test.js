@@ -1,5 +1,16 @@
 const uuid = require('uuid');
 
+/**
+ * Add a prefix into filename
+ * @param { string } value
+ * @param { string } prefix
+ * @return { string }
+ */
+function addPrefix (value, prefix = 'thumb-') {
+    const matches = /^(.+?\/posts\/)(.+)$/.exec(value)
+    return matches[1] + prefix + matches[2]
+}
+
 exports.seed = function (knex) {
     const feed_category = {
         id: uuid.v4(),
@@ -29,7 +40,7 @@ exports.seed = function (knex) {
         id: uuid.v4(),
         customer_id: customer.id,
         package_id: package.id,
-        is_paid: true,
+        is_paid: 1,
         custom_name: customer.custom_name,
         custom_phone: customer.custom_phone,
         rank: customer.rank
@@ -72,7 +83,9 @@ exports.seed = function (knex) {
                 id: uuid.v4(),
                 package_post_id: post.id,
                 purchase_id: purchase.id,
-                aws_path: post.aws_path
+                aws_path: post.aws_path,
+                aws_path_thumb: addPrefix(post.aws_path),
+                watermark_status: ''
             }));
             return knex('Purchase_posts').insert(purchasePosts);
         });
