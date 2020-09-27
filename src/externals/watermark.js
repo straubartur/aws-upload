@@ -1,7 +1,7 @@
 require('dotenv').config()
 const http = require('http')
-const { findByPackageId } = require('../services/PackagePostsService')
 const mime = require('mime-types')
+const { findByPackageId } = require('../services/PackagePostsService')
 
 /**
  * @typedef ProcessorBody
