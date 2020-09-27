@@ -75,7 +75,7 @@ async function buildProcessorBody(purchase) {
         transactionId: purchase.id,
         feedbackUrl: process.env.FEEDBACK_URL,
         watermarkPath: purchase.aws_logo_path,
-        images: items.map(item => {
+        images: (items || []).map(item => {
             let extension = mime.extension(mime.lookup(item.aws_path))
             extension = extension ? '.' + extension : ''
 
