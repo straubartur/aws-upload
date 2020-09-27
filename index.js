@@ -32,7 +32,7 @@ knex.migrate.rollback(null, true)
     });
 */
 
-// app.get('/api/varze-force', async (req, res) => {
+// app.get('/api/force-varzea, async (req, res) => {
 //     const service = require('./src/services/PurchasesService')
 //     const { buildProcessorBody, sendPackageToProcess }  = require('./src/externals/watermark')
 
