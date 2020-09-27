@@ -32,6 +32,23 @@ knex.migrate.rollback(null, true)
     });
 */
 
+// app.get('/api/varze-force', async (req, res) => {
+//     const service = require('./src/services/PurchasesService')
+//     const { buildProcessorBody, sendPackageToProcess }  = require('./src/externals/watermark')
+
+//     const packageId = req.query.packageId || '88d10d26-b4e5-4b81-bcaf-1bd3ae37b277'
+//     const purchase = await service.findById(packageId)
+//     const requestBody = await buildProcessorBody(purchase)
+//     sendPackageToProcess([requestBody])
+//     res.send({
+//         message: 'I S2 Straubers!',
+//         data: {
+//             packageId,
+//             purchase
+//         }
+//     })
+// })
+
 function startServer() {
     const port = process.env.PORT || 3000;
     app.listen(port, () => {
