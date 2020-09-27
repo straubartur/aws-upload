@@ -8,7 +8,7 @@ class Repository {
     }
 
     getModel() {
-        return knex(this.tableName).where('is_removed', false);
+        return knex(this.tableName).where('is_removed', 0);
     }
 
     create(data) {
@@ -67,7 +67,7 @@ class Repository {
 
             const modelCount = await model().count()
             const itensFound = modelCount && modelCount[0] && modelCount[0]['count(*)'];
-    
+
             return {
                 data,
                 pagination: {
