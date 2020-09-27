@@ -1,4 +1,4 @@
-const purchasePostsRepository = require('../repositories/PackagePostsRepository')
+const purchasePostsRepository = require('../repositories/PurchasePostsRepository')
 
 /**
  * @typedef PurchasePost
