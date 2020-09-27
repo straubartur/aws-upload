@@ -20,6 +20,7 @@ function createPurchases (req, res) {
     // TODO: Add validation schema
 
     purchasesService.create(purchase)
+        .then(() => res.status(201).json(buildMessage('Compra criada com sucesso', { id: purchase.id })))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
@@ -53,7 +54,7 @@ function deletePurchases (req, res) {
 
 function getGallery (req, res) {
     const { id } = req.params
-    
+
     purchasesService.getGallery(id)
         .then(result => res.status(200).json(result))
         .catch(error => {

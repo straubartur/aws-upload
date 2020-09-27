@@ -67,7 +67,7 @@ class Repository {
 
             const modelCount = await model().count()
             const itensFound = modelCount && modelCount[0] && modelCount[0]['count(*)'];
-    
+
             return {
                 data,
                 pagination: {

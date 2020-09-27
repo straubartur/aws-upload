@@ -66,6 +66,10 @@ function find(where, select, options) {
     return packagePostsRepository.find(where, select, options);
 }
 
+function findByPackageId(package_id, select = '*', options = { pagination: false }) {
+    return packagePostsRepository.find({ package_id }, select, options);
+}
+
 function findById(id, package_id) {
     return packagePostsRepository.findOne({ id, package_id });
 }
@@ -92,5 +96,6 @@ module.exports = {
     deleteById,
     find,
     findById,
+    findByPackageId,
     generateUrlToPostUpload
 };

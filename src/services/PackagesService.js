@@ -56,7 +56,7 @@ function publishPackage(id) {
 
 function generateUrls(pkgId, contentTypeList) {
     const packageId = pkgId ? pkgId : uuid.v4();
-    
+
     const generateUrls = contentTypeList.map(contentType => {
         return packagePostsService.generateUrlToPostUpload(packageId, contentType['Content-Type']);
     });

@@ -40,6 +40,7 @@ exports.seed = function (knex) {
         .then(() => {
             const feedPosts = [];
             const storyPosts = [];
+
             for (let i = 0; i < 20; i++) {
                 feedPosts.push({
                     id: uuid.v4(),
