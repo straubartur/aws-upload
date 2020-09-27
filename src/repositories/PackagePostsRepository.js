@@ -6,4 +6,4 @@ class PackagePostsRepository extends BaseRepository {
     }
 }
 
-module.exports = new PackagePostsRepository();
+module.exports = PackagePostsRepository;

@@ -24,4 +24,4 @@ class PurchasesRepository extends BaseRepository {
     }
 }
 
-module.exports = new PurchasesRepository();
+module.exports = PurchasesRepository;

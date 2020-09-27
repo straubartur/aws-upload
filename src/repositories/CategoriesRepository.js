@@ -6,4 +6,4 @@ class CategoriesRepository extends BaseRepository {
     }
 }
 
-module.exports = new CategoriesRepository();
+module.exports = CategoriesRepository;

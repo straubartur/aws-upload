@@ -6,4 +6,4 @@ class CustomersRepository extends BaseRepository {
     }
 }
 
-module.exports = new CustomersRepository();
+module.exports = CustomersRepository;
