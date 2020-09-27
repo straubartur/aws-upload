@@ -5,7 +5,6 @@ exports.up = function(knex) {
         table.uuid('customer_id').notNullable();
         table.uuid('package_id').notNullable();
         table.integer('loja_integrada_id').unsigned().notNullable();
-        table.string('watermark_status', 7)
         table.boolean('is_paid').notNullable().defaultTo(false);
         table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'));
         table.dateTime('updated_at').defaultTo(knex.raw('NULL ON UPDATE CURRENT_TIMESTAMP'));

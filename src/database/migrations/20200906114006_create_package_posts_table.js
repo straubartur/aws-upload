@@ -7,7 +7,6 @@ exports.up = function(knex) {
         table.text('name').notNullable();
         table.string('watermark_status', 7)
         table.text('aws_path').notNullable();
-        table.text('aws_path_thumb').notNullable();
         table.text('coordinate_x').notNullable();
         table.text('coordinate_y').notNullable();
         table.dateTime('created_at').notNullable().defaultTo(knex.raw('CURRENT_TIMESTAMP'))
