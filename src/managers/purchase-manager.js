@@ -21,9 +21,9 @@ async function validatePurchace (purchase) {
         isValid: Boolean(purchase),
         data: purchase
     }, () => true)
-    .then(data => rule(data, rules.testParaOGege))
-    // .then(data => rule(data, test))
-    // .then(data => rule(data, testNome))
+    .then(data => rule(data, rules.isPaid))
+    .then(data => rule(data, rules.hasAwsLogo))
+    .then(data => rule(data, rules.hasPackagePublished))
 
     return result.isValid
 }
