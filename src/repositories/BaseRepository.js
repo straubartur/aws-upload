@@ -8,7 +8,7 @@ class Repository {
     }
 
     getModel() {
-        return knex(this.tableName).where('is_removed', 0);
+        return knex(this.tableName).where('is_removed', false);
     }
 
     create(data) {
