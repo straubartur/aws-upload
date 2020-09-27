@@ -64,20 +64,11 @@ function publishPackage(req, res) {
 }
 
 function generateUrls(req, res) {
-    const { quantity } = req.params;
-    const { packageId } = req.query;
-    const urlQuantity = Number(quantity);
+   const { packageId } = req.query;
+   const contentTypeList = req.body || [];
 
-    if (Number.isNaN(urlQuantity) || urlQuantity < 1) {
-        return res.status(500).json(buildMessage('Quantidade de URL precisa ser um número maior que 0.'));
-    }
-
-    packagesService.generateUrls(packageId, urlQuantity)
+    packagesService.generateUrls(packageId, contentTypeList)
         .then(uploadURLs => res.status(200).json(uploadURLs))
-        .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
-        });
 }
 
 module.exports = {

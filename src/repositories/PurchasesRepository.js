@@ -16,7 +16,12 @@ class PurchasesRepository extends BaseRepository {
                 'Package_posts.is_removed': false,
                 'Categories.is_removed': false,
             })
-            .select('Categories.id as category_id', 'Categories.name as category_name', 'Purchase_posts.*');
+            .select([
+                'Categories.id as category_id',
+                'Categories.name as category_name',
+                'Categories.description as category_description',
+                'Purchase_posts.*'
+            ]);
     }
 }
 

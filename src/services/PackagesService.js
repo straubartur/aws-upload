@@ -54,13 +54,12 @@ function publishPackage(id) {
         });
 }
 
-function generateUrls(pkgId, quantity) {
+function generateUrls(pkgId, contentTypeList) {
     const packageId = pkgId ? pkgId : uuid.v4();
-    const generateUrls = [];
 
-    for (let i = 0; i < Number(quantity); i++) {
-        generateUrls.push(packagePostsService.generateUrlToPostUpload(packageId));
-    }
+    const generateUrls = contentTypeList.map(contentType => {
+        return packagePostsService.generateUrlToPostUpload(packageId, contentType['Content-Type']);
+    });
 
     return Promise.all(generateUrls)
         .then(posts => ({ id: packageId, posts }));

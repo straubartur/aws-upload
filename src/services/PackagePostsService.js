@@ -1,4 +1,5 @@
 const uuid = require('uuid');
+const mime = require('mime-types');
 const packagePostsRepository = require('../repositories/PackagePostsRepository');
 const S3 = require('../externals/s3');
 
@@ -74,13 +75,14 @@ function findById(id, package_id) {
 }
 
 
-function getPackagePostPathOfS3(packageId, postId) {
-    return `packages/${packageId}/posts/${postId}`;
+function getPackagePostPathOfS3(packageId, postId, extension) {
+    const ext = extension ? `.${extension}` : '';
+    return `packages/${packageId}/posts/${postId}${ext}`;
 }
 
-async function generateUrlToPostUpload(packageId) {
+async function generateUrlToPostUpload(packageId, contentType) {
     const id = uuid.v4();
-    const aws_path = getPackagePostPathOfS3(packageId, id);
+    const aws_path = getPackagePostPathOfS3(packageId, id, mime.extension(contentType));
     const uploadURL = await S3.uploadFileBySignedURL(aws_path);
     return { id, aws_path, uploadURL };
 }
