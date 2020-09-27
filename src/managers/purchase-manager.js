@@ -1,6 +1,7 @@
 const purchasePostsService = require('../services/PurchasePostsSevice')
 const packagesPostsService = require('../services/PackagePostsService')
 const rules = require('./purchase-rules')
+const watermark = require('../externals/watermark')
 const uuid = require('uuid')
 const mime = require('mime-types')
 
@@ -90,6 +91,8 @@ async function syncPurchasePosts (purchase) {
             await purchasePostsService.create(newPost)
         }
     })
+
+    setTimeout(watermark.processByPurchase, 0, purchase)
 
     return true
 }
