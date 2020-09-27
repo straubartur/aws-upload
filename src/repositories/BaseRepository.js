@@ -7,6 +7,13 @@ class Repository {
       this.tableName = tableName;
     }
 
+    /**
+     * @return { import('knex') }
+     */
+    get engine() {
+        return knex
+    }
+
     getModel() {
         return knex(this.tableName).where('is_removed', false);
     }
