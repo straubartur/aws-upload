@@ -3,6 +3,7 @@ const customersService = require('../services/CustomersService');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
 const uuid = require('uuid');
+const { processByPurchase } = require('../externals/watermark');
 
 function throwIfExist(message) {
     return (result) => {
@@ -28,11 +29,8 @@ function create(purchase) {
     purchase.id = uuid.v4();
 
     return purchasesRepository.create(purchase)
-        .then(() => {
-            // TODO: If package is published
-            // Customizer.PurchaseById(purchase);
-            // Use setTimeout ou nextTick para não parar o fluxo de criação
-        });
+        // TODO: move it to correctly local
+        .then(() => setTimeout(processByPurchase, 0, purchase));
 }
 
 function updateById(id, purchase) {
@@ -136,11 +134,16 @@ async function updatePurchaseByLojaIntegrada(loja_integrada_pedido_id) {
     }
 }
 
+function findById(id) {
+    return purchasesRepository.findOne({ id });
+}
+
 module.exports = {
     create,
     updateById,
     deleteById,
     find,
+    findById,
     getGallery,
     generateUrlToLogoUpload,
     createPurchaseWithLogo
