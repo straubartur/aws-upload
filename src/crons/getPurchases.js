@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const knex = require('../database/knex');
+const { knex } = require('../database/knex');
 const axios = require('axios');
 
 

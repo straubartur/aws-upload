@@ -1,18 +1,19 @@
-const knex = require('../database/knex')
+const { knex } = require('../database/knex');
 
 const NOOP = () => {};
 
 class Repository {
-    constructor(tableName) {
-      this.tableName = tableName;
+    constructor(tableName, trx) {
+        this.tableName = tableName;
+        this.trx = trx || knex;
     }
 
     getModel() {
-        return knex(this.tableName).where('is_removed', false);
+        return this.trx(this.tableName).where('is_removed', false);
     }
 
     create(data) {
-      return knex(this.tableName).insert(data);
+        return this.trx(this.tableName).insert(data);
     }
 
     updateById(id, data) {

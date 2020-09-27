@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const knex = require('../database/knex');
+const { knex } = require('../database/knex');
 const axios = require('axios');
 
 const PURCHASE_DETAIL_URL = 'https://api.awsli.com.br/v1/pedido/pedido_id='
