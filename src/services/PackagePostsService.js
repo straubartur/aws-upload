@@ -20,13 +20,18 @@ class PackagePostsService extends PackagePostsRepository {
         }
 
         if (post.is_removed) {
-            return super.deleteById(oldPost.id);
+            return this.deleteById(oldPost.id, package_id);
         }
 
-        delete post.aws_path;
-        delete post.package_id;
+        return this.updateById(oldPost.id, post, package_id);
+    }
 
-        return super.updateById(oldPost.id, post);
+    create(post) {
+        if (/^image\//.test(post.content_type) === false){
+            post.is_customizable = false;
+        }
+
+        super.create(post);
     }
 
     updatePosts(posts, package_id) {
@@ -40,6 +45,7 @@ class PackagePostsService extends PackagePostsRepository {
             throw new Error(`Post[${id}] não encontrado`);
         }
 
+        delete newPost.content_type;
         delete newPost.aws_path;
         delete newPost.package_id;
 
