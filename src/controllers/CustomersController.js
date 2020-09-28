@@ -2,11 +2,26 @@ const { buildMessage } = require('../utils/buildMessage');
 const customersService = require('../services/CustomersService');
 
 function getCustumers(req, res) {
-    const { id } = req.params
-    const { limit, page } = req.query;
-    const where = id ? { id } : {};
+    const { limit, page, email } = req.query;
+    let findPromisse;
 
-    customersService.find(where, '*', { limit, page })
+    if (email) {
+        findPromisse = customersService.findByEmail(email);
+    } else {
+        findPromisse = customersService.find(undefined, '*', { limit, page });
+    }
+
+    findPromisse.then(result => res.status(200).json(result))
+        .catch(error => {
+            console.log(error)
+            res.status(500).json(buildMessage(error.message));
+        });
+}
+
+function getCustumerById (req, res) {
+    const { id } = req.params
+
+    customersService.findById(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
@@ -56,6 +71,7 @@ function deleteCustumer(req, res) {
 
 module.exports = {
     getCustumers,
+    getCustumerById,
     createCustumer,
     updateCustumer,
     deleteCustumer
