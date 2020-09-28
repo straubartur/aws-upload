@@ -1,7 +1,7 @@
 require('dotenv').config()
 const http = require('http')
 const mime = require('mime-types')
-const { findByPackageId } = require('../services/PackagePostsService')
+const PackagePostsService = require('../services/PackagePostsService')
 
 /**
  * @typedef ProcessorBody
@@ -16,6 +16,7 @@ const { findByPackageId } = require('../services/PackagePostsService')
  * @property { ImagePositions } positions
  * @property { String } baseImagePath
  * @property { String } s3ImagePath
+ * @property { String } postId
 */
 
 /**
@@ -66,10 +67,11 @@ const { findByPackageId } = require('../services/PackagePostsService')
  * @return { ProcessorBody }
  */
 async function buildProcessorBody(purchase) {
+    const packagePostsService = new PackagePostsService()
     /**
      * @type { Array<PurchaseItem> }
      */
-    const items = await findByPackageId(purchase.package_id).data
+    const items = await packagePostsService.findByPackageId(purchase.package_id).data
 
     return {
         transactionId: purchase.id,
@@ -86,6 +88,7 @@ async function buildProcessorBody(purchase) {
                     height: 150,
                     width: 150
                 },
+                postId: item.id,
                 baseImagePath: item.aws_path,
                 s3ImagePath: `purchases/${purchase.id}/posts/${item.id}${extension}`
             }

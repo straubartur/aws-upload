@@ -63,23 +63,25 @@ async function syncPurchasePosts (purchase) {
         return false
     }
 
-    const packagesPostsService = new PackagesPostsService();
+    const packagesPostsService = new PackagesPostsService()
     const posts = await packagesPostsService.findByPackageId(purchase.package_id)
 
     if (posts.data && !posts.data.length) {
         return false
     }
 
-    const trx = getTransaction();
-    const purchasePostsService = new PurchasePostsService(trx);
     try {
-        posts.data.forEach(async post => {
+        const trx = await getTransaction()
+        const purchasePostsService = new PurchasePostsService(trx)
+
+        const promises = posts.data.map(async (post, i) => {
             const postExists = await existsPurchasePost(purchase.id, post.id)
-    
+
             if (!postExists) {
                 const id = uuid.v4()
                 let extension = mime.extension(mime.lookup(post.aws_path))
                 extension = extension ? '.' + extension : ''
+
                 /**
                  * @type { import('../services/PurchasePostsSevice').PurchasePost }
                  */
@@ -91,18 +93,27 @@ async function syncPurchasePosts (purchase) {
                     aws_path_thumb: `purchases/${purchase.id}/posts/thumb-${id}${extension}`,
                     watermark_status: ''
                 }
-                await purchasePostsService.create(newPost)
+
+                return purchasePostsService.create(newPost)
             }
-        });
-        trx.commit();
+
+            return Promise.resolve(true)
+        })
+
+        return Promise.all(promises)
+            .then(async () => {
+                await trx.commit()
+                setTimeout(watermark.processByPurchase, 0, purchase)
+                return true
+            })
+            .catch((async (_) => {
+                await trx.rollback()
+                return false
+            }))
     } catch {
-        trx.rollback();
-        return false;
+        trx.rollback()
+        return false
     }
-
-    setTimeout(watermark.processByPurchase, 0, purchase)
-
-    return true
 }
 
 /**
@@ -112,7 +123,7 @@ async function syncPurchasePosts (purchase) {
  * @return { Promise<Boolean> }
  */
 async function existsPurchasePost (purchase_id, package_post_id) {
-    const purchasePostsService = new PurchasePostsService();
+    const purchasePostsService = new PurchasePostsService()
     const post = await purchasePostsService.find({ purchase_id, package_post_id, is_removed: 0 })
     return Boolean(post.data.length)
 }
