@@ -1,9 +1,9 @@
 const BaseRepository = require('./BaseRepository');
 
 class PackagePostsRepository extends BaseRepository {
-    constructor() {
-        super('Package_posts');
+    constructor(trx) {
+        super('Package_posts', trx);
     }
 }
 
-module.exports = new PackagePostsRepository();
+module.exports = PackagePostsRepository;

@@ -1,5 +1,7 @@
 const { buildMessage } = require('../utils/buildMessage');
-const customersService = require('../services/CustomersService');
+const { getTransaction } = require('../database/knex');
+const CustomersService = require('../services/CustomersService');
+const customerValidator = require('../validator/CustomerValidator');
 
 function getCustumers(req, res) {
     const { limit, page, email } = req.query;
@@ -21,6 +23,8 @@ function getCustumers(req, res) {
 function getCustumerById (req, res) {
     const { id } = req.params
 
+    const customersService = new CustomersService();
+
     customersService.findById(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
@@ -29,43 +33,83 @@ function getCustumerById (req, res) {
         });
 }
 
-function createCustumer(req, res) {
-    const newCustomer = req.body;
+function getCustumerById (req, res) {
+    const { id } = req.params
 
-    // TODO: Add validation schema
-    // if (!loja_integrada_purchase_id) res.send(400).json({ message: 'O id da compra da loja integrada é um ' })
+    const customersService = new CustomersService();
 
-    customersService.create(newCustomer)
-        .then(() => res.status(201).json(buildMessage('Cliente criado com sucesso', { id: newCustomer.id })))
+    customersService.findById(id)
+        .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error)
             res.status(500).json(buildMessage(error.message));
         });
 }
 
-function updateCustumer(req, res) {
+async function createCustumer(req, res) {
+    const newCustomer = req.body;
+
+    const { error } = customerValidator.validate(newCustomer);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
+
+    const trx = await getTransaction();
+    const customersService = new CustomersService(trx);
+
+    customersService.create(newCustomer)
+        .then(() => {
+            trx.commit();
+            res.status(201).json(buildMessage('Cliente criado com sucesso', { id: newCustomer.id }))
+        })
+        .catch(error => {
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
+        });
+}
+
+async function updateCustumer(req, res) {
     const { id } = req.params;
     const customer = req.body;
 
-    // TODO: Add validation schema
-    // if (!loja_integrada_purchase_id) res.send(400).json({ message: 'O id da compra da loja integrada é um ' })
+    const { error } = customerValidator.validate(customer);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
+
+    const trx = await getTransaction();
+    const customersService = new CustomersService(trx);
 
     customersService.updateById(id, customer)
-        .then(() => res.status(200).json(buildMessage('Cliente modificado com sucesso', { id })))
+        .then(() => {
+            trx.commit();
+            res.status(200).json(buildMessage('Cliente modificado com sucesso', { id }))
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
-function deleteCustumer(req, res) {
+async function deleteCustumer(req, res) {
     const { id } = req.params;
 
+    const trx = await getTransaction();
+    const customersService = new CustomersService(trx);
+
     customersService.deleteById(id)
-        .then(() => res.sendStatus(204))
+        .then(() => {
+            trx.commit();
+            res.sendStatus(204);
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 

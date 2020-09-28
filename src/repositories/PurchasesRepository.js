@@ -1,13 +1,12 @@
 const BaseRepository = require('./BaseRepository');
-const knex = require('../database/knex');
 
 class PurchasesRepository extends BaseRepository {
-    constructor() {
-        super('Purchases');
+    constructor(trx) {
+        super('Purchases', trx);
     }
 
     getGalleryPosts(purchaseId) {
-        return knex('Purchase_posts')
+        return this.trx('Purchase_posts')
             .leftJoin('Package_posts', 'Purchase_posts.package_post_id', 'Package_posts.id')
             .leftJoin('Categories', 'Package_posts.category_id', 'Categories.id')
             .where({
@@ -25,4 +24,4 @@ class PurchasesRepository extends BaseRepository {
     }
 }
 
-module.exports = new PurchasesRepository();
+module.exports = PurchasesRepository;

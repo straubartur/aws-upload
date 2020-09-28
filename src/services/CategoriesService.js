@@ -1,33 +1,14 @@
-const categoriesRepository = require('../repositories/CategoriesRepository');
 const uuid = require('uuid');
+const CategoriesRepository = require('../repositories/CategoriesRepository');
 
-function create(newCategory) {
-    newCategory.id = uuid.v4();
+class CategoriesService extends CategoriesRepository {
 
-    return categoriesRepository.create(newCategory)
-        .then(() => newCategory);
+    create(newCategory) {
+        newCategory.id = uuid.v4();
+
+        return super.create(newCategory)
+            .then(() => newCategory);
+    }
 }
 
-function updateById(id, category) {
-    return categoriesRepository.updateById(id, category);
-}
-
-function deleteById(id) {
-    return categoriesRepository.deleteById(id);
-}
-
-function find(where, select, options) {
-    return categoriesRepository.find(where, select, options);
-}
-
-function findById(id) {
-    return categoriesRepository.findById(id);
-}
-
-module.exports = {
-    create,
-    updateById,
-    deleteById,
-    find,
-    findById
-};
+module.exports = CategoriesService;

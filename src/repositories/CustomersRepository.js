@@ -1,9 +1,9 @@
 const BaseRepository = require('./BaseRepository');
 
 class CustomersRepository extends BaseRepository {
-    constructor() {
-        super('Customers');
+    constructor(trx) {
+        super('Customers', trx);
     }
 }
 
-module.exports = new CustomersRepository();
+module.exports = CustomersRepository;

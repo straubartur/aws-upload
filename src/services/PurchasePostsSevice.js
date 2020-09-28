@@ -1,4 +1,5 @@
-const purchasePostsRepository = require('../repositories/PurchasePostsRepository')
+const PurchasePostsRepository = require('../repositories/PurchasePostsRepository');
+const PurchasesService = require('./PurchasesService');
 
 /**
  * @typedef PurchasePost
@@ -14,26 +15,26 @@ const purchasePostsRepository = require('../repositories/PurchasePostsRepository
  * @property { Date } removed_at
  */
 
-/**
- * Find the values o dabase
- * @param { import('knex').Where } where
- * @param { string } select
- * @param { Object } options
- * @return { Promise<import('mysql2').RowDataPacket> }
- */
-function find(where, select = '*', options = { pagination: false }) {
-    return purchasePostsRepository.find(where, select, options)
+ class PurchasePostsService extends PurchasePostsRepository {
+
+    /**
+     * Find the values of database
+     * @param { import('knex').Where } where
+     * @param { string } select
+     * @param { Object } options
+     * @return { Promise<import('mysql2').RowDataPacket> }
+     */
+    find(where, select = '*', options = { pagination: false }) {
+        return super.find(where, select, options)
+    }
+
+    /**
+     * @param { PurchasePost } newPost
+     * @return { import('knex').QueryBuilder<TRecord, TResult2> }
+     */
+    create(newPost) {
+        return super.create(newPost);
+    }
 }
 
-/**
- * @param { PurchasePost } newPost
- * @return { import('knex').QueryBuilder<TRecord, TResult2> }
- */
-function create(newPost) {
-    return purchasePostsRepository.create(newPost);
-}
-
-module.exports = {
-    find,
-    create
-}
+module.exports = PurchasePostsService;

@@ -1,5 +1,5 @@
-const customersRepository = require('../repositories/CustomersRepository');
 const uuid = require('uuid');
+const CustomersRepository = require('../repositories/CustomersRepository');
 
 function throwIfCustomerExist(field) {
     return (customer) => {
@@ -17,51 +17,34 @@ function throwIfOtherCustomerExistWithField(field, newCustomer) {
     }
 }
 
-function create(newCustomer) {
-    newCustomer.id = uuid.v4();
+class CustomersService extends CustomersRepository {
 
-    return findByLojaIntegradaClienteId(newCustomer.loja_integrada_cliente_id)
-        .then(throwIfCustomerExist('loja_integrada_cliente_id'))
-        .then(() => findByEmail(newCustomer.email))
-        .then(throwIfCustomerExist('email'))
-        .then(() => customersRepository.create(newCustomer))
-        .then(() => newCustomer);
+    create(newCustomer) {
+        newCustomer.id = uuid.v4();
+    
+        return this.findByLojaIntegradaClienteId(newCustomer.loja_integrada_cliente_id)
+            .then(throwIfCustomerExist('loja_integrada_cliente_id'))
+            .then(() => this.findByEmail(newCustomer.email))
+            .then(throwIfCustomerExist('email'))
+            .then(() => super.create(newCustomer))
+            .then(() => newCustomer);
+    }
+
+    updateById(id, customer) {
+        return this.findByLojaIntegradaClienteId(customer.loja_integrada_cliente_id)
+            .then(throwIfOtherCustomerExistWithField('loja_integrada_cliente_id', customer))
+            .then(() => this.findByEmail(customer.email))
+            .then(throwIfOtherCustomerExistWithField('email', customer))
+            .then(() => super.updateById(id, customer));
+    }
+
+    findByLojaIntegradaClienteId(loja_integrada_cliente_id) {
+        return loja_integrada_cliente_id ? this.findOne({ loja_integrada_cliente_id }) : Promise.resolve();
+    }
+
+    findByEmail(email) {
+        return email ? this.findOne({ email }) : Promise.resolve();
+    }
 }
 
-function updateById(id, customer) {
-    return findByLojaIntegradaClienteId(customer.loja_integrada_cliente_id)
-        .then(throwIfOtherCustomerExistWithField('loja_integrada_cliente_id', customer))
-        .then(() => findByEmail(customer.email))
-        .then(throwIfOtherCustomerExistWithField('email', customer))
-        .then(() => customersRepository.updateById(id, customer));
-}
-
-function deleteById(id) {
-    return customersRepository.deleteById(id);
-}
-
-function find(where, select, options) {
-    return customersRepository.find(where, select, options);
-}
-
-function findById(id) {
-    return customersRepository.findById(id);
-}
-
-function findByLojaIntegradaClienteId(loja_integrada_cliente_id) {
-    return loja_integrada_cliente_id ? customersRepository.findOne({ loja_integrada_cliente_id }) : Promise.resolve();
-}
-
-function findByEmail(email) {
-    return email ? customersRepository.findOne({ email }) : Promise.resolve();
-}
-
-module.exports = {
-    create,
-    updateById,
-    deleteById,
-    find,
-    findById,
-    findByLojaIntegradaClienteId,
-    findByEmail
-};
+module.exports = CustomersService;

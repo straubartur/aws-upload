@@ -1,12 +1,16 @@
-const { buildMessage } = require('../utils/buildMessage');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');
+const { buildMessage } = require('../utils/buildMessage');
+const UsersService = require('../services/UsersService');
+const { getTransaction } = require('../database/knex');
+const userValidator = require('../validator/UserValidator')
 const saltRounds = 10;
 
-const usersService = require('../services/UsersService');
-
-function login(req, res) {
+async function login(req, res) {
     const { email, password } = req.body;
+
+    const trx = await getTransaction();
+    const usersService = new UsersService(trx);
 
     usersService.findByEmail(email)
         .then(user => {
@@ -26,12 +30,21 @@ function login(req, res) {
         })
         .catch(error => {
             console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
-function signUp (req, res) {
+async function signUp (req, res) {
     const { name, email, password } = req.body;
+
+    const { error } = userValidator.User.validate(req.body);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
+
+    const trx = await getTransaction();
+    const usersService = new UsersService(trx);
 
     usersService.findByEmail(email)
         .then(user => {
@@ -42,10 +55,15 @@ function signUp (req, res) {
             return bcrypt.hash(password, saltRounds);
         })
         .then((hash) => usersService.create({ name, email, password: hash }))
-        .then(() => res.status(201).json(buildMessage('Usuário cadastrado com sucesso')))
+        .then(() => {
+            trx.commit();
+            res.status(201).json(buildMessage('Usuário cadastrado com sucesso'))
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            trx.rollback();
+            console.log(error);
+
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
