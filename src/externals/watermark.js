@@ -71,14 +71,14 @@ async function buildProcessorBody(purchase) {
     /**
      * @type { Array<PurchaseItem> }
      */
-    const items = await packagePostsService.findByPackageId(purchase.package_id).data
+    const items = await packagePostsService.find({ package_id: purchase.package_id, is_customizable: true }).data
 
     return {
         transactionId: purchase.id,
         feedbackUrl: process.env.FEEDBACK_URL,
         watermarkPath: purchase.aws_logo_path,
         images: (items || []).map(item => {
-            let extension = mime.extension(mime.lookup(item.aws_path))
+            let extension = mime.extension(item.content_type)
             extension = extension ? '.' + extension : ''
 
             return {
