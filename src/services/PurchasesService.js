@@ -5,6 +5,7 @@ const PackagesService = require('../services/PackagesService');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
 const { syncPurchasePosts } = require('../managers/purchase-manager');
+const { buildPostResponse } = require('../utils/buildPostResponse');
 
 function throwIfExist(message) {
     return (result) => {
@@ -85,11 +86,11 @@ class PurchasesService extends PurchasesRepository {
                 posts: []
             };
 
-            category.posts.push({
+            category.posts.push(buildPostResponse({
                 id: post.id,
                 aws_path: post.aws_path,
-                thumbnail: post.thumbnail
-            });
+                aws_path_thumb: post.aws_path_thumb
+            }));
 
             group[post.category_id] = category;
 

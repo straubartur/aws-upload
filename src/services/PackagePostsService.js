@@ -20,13 +20,18 @@ class PackagePostsService extends PackagePostsRepository {
         }
 
         if (post.is_removed) {
-            return super.deleteById(oldPost.id);
+            return this.deleteById(oldPost.id, package_id);
         }
 
-        delete post.aws_path;
-        delete post.package_id;
+        return this.updateById(oldPost.id, post, package_id);
+    }
 
-        return super.updateById(oldPost.id, post);
+    create(post) {
+        if (/^image\//.test(post.content_type) === false){
+            post.is_customizable = false;
+        }
+
+        super.create(post);
     }
 
     updatePosts(posts, package_id) {
@@ -40,6 +45,7 @@ class PackagePostsService extends PackagePostsRepository {
             throw new Error(`Post[${id}] não encontrado`);
         }
 
+        delete newPost.content_type;
         delete newPost.aws_path;
         delete newPost.package_id;
 
@@ -73,11 +79,11 @@ class PackagePostsService extends PackagePostsRepository {
         return `packages/${packageId}/posts/${postId}${ext}`;
     }
 
-    async generateUrlToPostUpload(packageId, contentType) {
+    async generateUrlToPostUpload(packageId, content_type) {
         const id = uuid.v4();
-        const aws_path = this.getPackagePostPathOfS3(packageId, id, mime.extension(contentType));
+        const aws_path = this.getPackagePostPathOfS3(packageId, id, mime.extension(content_type));
         const uploadURL = await S3.uploadFileBySignedURL(aws_path);
-        return { id, aws_path, uploadURL };
+        return { id, aws_path, content_type, uploadURL };
     }
 }
 

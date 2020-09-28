@@ -18,6 +18,13 @@ exports.uploadFileBySignedURL = function uploadFileBySignedURL(keyPath) {
   return Promise.resolve(s3.getSignedUrl('putObject', params));
 }
 
+exports.buildS3Url = function buildS3Url(keyPath) {
+  const bucketName = process.env.AWS_BUCKET_NAME;
+  const region = process.env.AWS_REGION;
+  
+  return `https://s3.${region}.amazonaws.com/${bucketName}/${keyPath}`;
+}
+
 exports.deleteObjectByKey = function deleteObjectByKey(keyPath) {
   var params = {
     Bucket: process.env.AWS_BUCKET_NAME,

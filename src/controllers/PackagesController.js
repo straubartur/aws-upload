@@ -1,4 +1,5 @@
 const { buildMessage } = require('../utils/buildMessage');
+const { buildPostResponse } = require('../utils/buildPostResponse');
 const { getTransaction } = require('../database/knex');
 const PackagesService = require('../services/PackagesService');
 const packageValidator = require('../validator/PackageValidator');
@@ -20,7 +21,11 @@ function getPackageById(req, res) {
     const packagesService = new PackagesService();
 
     packagesService.findById(id)
-        .then(result => res.status(200).json(result))
+        .then(package => {
+            package.posts = package.posts.map(buildPostResponse);
+            return package;
+        })
+        .then(package => res.status(200).json(package))
         .catch(error => {
             console.log(error);
             res.status(500).json(buildMessage('Ops! Algo deu errado =['));

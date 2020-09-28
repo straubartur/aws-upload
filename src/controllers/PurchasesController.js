@@ -3,12 +3,11 @@ const { getTransaction } = require('../database/knex');
 const PurchasesService = require('../services/PurchasesService');
 
 function getPurchases (req, res) {
-    const { id } = req.params
     const { limit, page } = req.query;
 
     const purchasesService = new PurchasesService();
 
-    purchasesService.find(where, '*', { limit, page })
+    purchasesService.find(undefined, '*', { limit, page })
         .then(result => res.status(200).json(result))
         .catch(error => {
             console.log(error);
