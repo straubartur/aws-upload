@@ -10,7 +10,7 @@ purchasesRoutes.post('/new', PurchasesController.createPurchaseWithLogo);
 purchasesRoutes.use(authMiddleware)
 
 purchasesRoutes.get('/', PurchasesController.getPurchases);
-purchasesRoutes.get('/:id', PurchasesController.getPurchases);
+purchasesRoutes.get('/:id', PurchasesController.getPurchaseById);
 purchasesRoutes.post('/', PurchasesController.createPurchases);
 purchasesRoutes.put('/:id', PurchasesController.updatePurchases);
 purchasesRoutes.delete('/:id', PurchasesController.deletePurchases);

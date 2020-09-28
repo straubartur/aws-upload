@@ -1,74 +1,113 @@
 const { buildMessage } = require('../utils/buildMessage');
-const purchasesService = require('../services/PurchasesService');
+const { getTransaction } = require('../database/knex');
+const PurchasesService = require('../services/PurchasesService');
 
 function getPurchases (req, res) {
     const { id } = req.params
     const { limit, page } = req.query;
-    const where = id ? { id } : {};
+
+    const purchasesService = new PurchasesService();
 
     purchasesService.find(where, '*', { limit, page })
         .then(result => res.status(200).json(result))
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
-function createPurchases (req, res) {
+function getPurchaseById (req, res) {
+    const { id } = req.params
+
+    const purchasesService = new PurchasesService();
+
+    purchasesService.findById(id)
+        .then(result => res.status(200).json(result))
+        .catch(error => {
+            console.log(error);
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
+        });
+}
+
+async function createPurchases (req, res) {
     const purchase = req.body || {};
 
     // TODO: Add validation schema
+
+    const trx = await getTransaction();
+    const purchasesService = new PurchasesService(trx);
 
     purchasesService.create(purchase)
-        .then(() => res.status(201).json(buildMessage('Compra criada com sucesso', { id: purchase.id })))
+        .then(() => {
+            trx.commit();
+            res.status(201).json(buildMessage('Compra criada com sucesso', { id: purchase.id }))
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
-function updatePurchases (req, res) {
+async function updatePurchases (req, res) {
     const { id } = req.params;
     const purchase = req.body || {};
 
     // TODO: Add validation schema
 
+    const trx = await getTransaction();
+    const purchasesService = new PurchasesService(trx);
+
     purchasesService.updateById(id, purchase)
-        .then(() => res.status(200).json(buildMessage('Compra modificado com sucesso', { id })))
+        .then(() => {
+            trx.commit();
+            res.status(200).json(buildMessage('Compra modificado com sucesso', { id }))
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
-function deletePurchases (req, res) {
+async function deletePurchases (req, res) {
     const { id } = req.params;
 
+    const trx = await getTransaction();
+    const purchasesService = new PurchasesService(trx);
+
     purchasesService.deleteById(id)
-        .then(() => res.sendStatus(204))
+        .then(() => {
+            trx.commit();
+            res.sendStatus(204)
+        })
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
 function getGallery (req, res) {
     const { id } = req.params
 
+    const purchasesService = new PurchasesService();
+
     purchasesService.getGallery(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
 function generateLogoUrl (req, res) {
+    const purchasesService = new PurchasesService();
     purchasesService.generateUrlToLogoUpload()
         .then(uploadURL => res.status(200).json(uploadURL))
         .catch(error => {
-            console.log(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
@@ -78,19 +117,27 @@ function generateLogoUrl (req, res) {
  * @param {Object} req - Express request object
  * @param {Object} res - Express response object
  */
-function createPurchaseWithLogo (req, res) {
+async function createPurchaseWithLogo (req, res) {
     const newPurchase = req.body || {};
 
+    const trx = await getTransaction();
+    const purchasesService = new PurchasesService(trx);
+
     purchasesService.createPurchaseWithLogo(newPurchase)
-        .then(() => res.status(201).json(buildMessage('Compra criado com sucesso', { id: newPurchase.id })))
+        .then(() => {
+            trx.commit();
+            res.status(201).json(buildMessage('Compra criado com sucesso', { id: newPurchase.id }))
+        })
         .catch(error => {
-            console.error(error)
-            res.status(500).json(buildMessage(error.message));
+            console.log(error);
+            trx.rollback();
+            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
         });
 }
 
 module.exports = {
     getPurchases,
+    getPurchaseById,
     createPurchases,
     updatePurchases,
     deletePurchases,

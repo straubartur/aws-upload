@@ -1,7 +1,7 @@
 const uuid = require('uuid');
-const purchasesRepository = require('../repositories/PurchasesRepository');
-const customersService = require('../services/CustomersService');
-const packagesService = require('../services/PackagesService');
+const PurchasesRepository = require('../repositories/PurchasesRepository');
+const CustomersService = require('../services/CustomersService');
+const PackagesService = require('../services/PackagesService');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
 const { syncPurchasePosts } = require('../managers/purchase-manager');
@@ -26,167 +26,150 @@ function throwIfNotExist(message) {
     }
 }
 
-function create(purchase) {
-    purchase.id = uuid.v4();
+class PurchasesService extends PurchasesRepository {
+    constructor(trx) {
+        super(trx);
+        this.customersService = new CustomersService(this.trx);
+        this.packagesService = new PackagesService(this.trx);
+    }
 
-    return purchasesRepository.create(purchase)
-        .then(() => setTimeout(syncPurchasePosts, 0, purchase));
-}
+    create(purchase) {
+        purchase.id = purchase.id || uuid.v4();
 
-function updateById(id, purchase) {
-    return purchasesRepository.updateById(id, purchase);
-}
+        return super.create(purchase)
+            .then(() => setTimeout(syncPurchasePosts, 0, purchase));
+    }
 
-function deleteById(id) {
-    return purchasesRepository.deleteById(id);
-}
+    findByLojaIntegradaPedidoId(loja_integrada_pedido_id) {
+        return loja_integrada_pedido_id ? purchasesRepository.findOne({ loja_integrada_pedido_id }) : Promise.resolve();
+    }
 
-function find(where, select, options) {
-    return purchasesRepository.find(where, select, options);
-}
+    getGallery(id) {
+        return this.findOne({ id, is_paid: true })
+                .then(throwIfNotExist('Compra não encontrada!'))
+                .then(async (purchase) => {
+                    const groupPosts = await this.getPostsGroupByCategories(purchase.id);
+                    const customer = await this.customersService.findById(purchase.customer_id);
+                    const pkg = await this.packagesService.findById(purchase.package_id);
 
-function findByLojaIntegradaPedidoId(loja_integrada_pedido_id) {
-    return loja_integrada_pedido_id ? purchasesRepository.findOne({ loja_integrada_pedido_id }) : Promise.resolve();
-}
+                    return {
+                        purchase: {
+                            id: purchase.id,
+                            customer_id: purchase.customer_id,
+                            package_id: purchase.package_id,
+                            loja_integrada_pedido_id: purchase.loja_integrada_pedido_id,
+                        },
+                        customer: {
+                            id: customer.id,
+                            name: customer.name
+                        },
+                        package: {
+                            id: pkg.id,
+                            name: pkg.name,
+                            description: pkg.description
+                        },
+                        postsByCategory: groupPosts
+                    }
+                });
+    }
 
-function getGallery(id) {
-    return purchasesRepository.findOne({ id, is_paid: true })
-            .then(throwIfNotExist('Compra não encontrada!'))
-            .then(async (purchase) => {
-                const groupPosts = await getPostsGroupByCategories(purchase.id);
-                const customer = await customersService.findById(purchase.customer_id);
-                const package = await packagesService.findById(purchase.package_id);
+    async getPostsGroupByCategories(purchaseId) {
+        const posts = await this.getGalleryPosts(purchaseId)
+        const groupPosts = posts.reduce((group, post) => {
+            const category = group[post.category_id] || {
+                category: {
+                    id: post.category_id,
+                    name: post.category_name,
+                    description: post.category_description
+                },
+                posts: []
+            };
 
-                return {
-                    purchase: {
-                        id: purchase.id,
-                        customer_id: purchase.customer_id,
-                        package_id: purchase.package_id,
-                        loja_integrada_pedido_id: purchase.loja_integrada_pedido_id,
-                    },
-                    customer: {
-                        id: customer.id,
-                        name: customer.name
-                    },
-                    package: {
-                        id: package.id,
-                        name: package.name,
-                        description: package.description
-                    },
-                    postsByCategory: groupPosts
-                }
+            category.posts.push({
+                id: post.id,
+                aws_path: post.aws_path,
+                thumbnail: post.thumbnail
             });
-}
 
-async function getPostsGroupByCategories(purchaseId) {
-    const posts = await purchasesRepository.getGalleryPosts(purchaseId)
-    const groupPosts = posts.reduce((group, post) => {
-        const category = group[post.category_id] || {
-            category: {
-                id: post.category_id,
-                name: post.category_name,
-                description: post.category_description
-            },
-            posts: []
-        };
+            group[post.category_id] = category;
 
-        category.posts.push({
-            id: post.id,
-            aws_path: post.aws_path,
-            thumbnail: post.thumbnail
+            return group;
+        }, {});
+
+        return groupPosts;
+    }
+
+    getLogoPathOfS3(purchaseId) {
+        return `purchases/${purchaseId}/logo.png`;
+    }
+
+    async generateUrlToLogoUpload() {
+        const id = uuid.v4();
+        const aws_logo_path = this.getLogoPathOfS3(id);
+        const uploadURL = await S3.uploadFileBySignedURL(aws_logo_path);
+        return { id, aws_logo_path, uploadURL };
+    }
+
+    createPurchaseWithLogo (newPurchase) {
+        return findByLojaIntegradaPedidoId(newPurchase.loja_integrada_pedido_id)
+            .then(purchase => throwIfExist(purchase, 'Pedido já cadastrado'))
+            .then(async () => {
+                await purchasesRepository.create(newPurchase);
+
+                setTimeout(updatePurchaseByLojaIntegrada, 0, newPurchase.loja_integrada_pedido_id);
+
+                return newPurchase;
+            });
+    }
+
+    createByLojaIntegradaPedido(pedido) {
+        // TODO
+        return Promise.resolve({
+            id: uuid.v4(),
+            pedido
         });
+    }
 
-        group[post.category_id] = category;
+    async updatePurchaseByLojaIntegrada(loja_integrada_pedido_id) {
+        try {
+            const pedido = await lojaIntegrada.getPedidoDetail(loja_integrada_pedido_id);
+            let purchase = await purchasesRepository.find({ loja_integrada_pedido_id });
+            let customer = await customersService.find({ loja_integrada_cliente_id: pedido.cliente.id });
+            let custom_info;
 
-        return group;
-    }, {});
-
-    return groupPosts;
-}
-
-function getLogoPathOfS3(purchaseId) {
-    return `purchases/${purchaseId}/logo.png`;
-}
-
-async function generateUrlToLogoUpload() {
-    const id = uuid.v4();
-    const aws_logo_path = getLogoPathOfS3(id);
-    const uploadURL = await S3.uploadFileBySignedURL(aws_logo_path);
-    return { id, aws_logo_path, uploadURL };
-}
-
-function createPurchaseWithLogo (newPurchase) {
-    return findByLojaIntegradaPedidoId(newPurchase.loja_integrada_pedido_id)
-        .then(purchase => throwIfExist(purchase, 'Pedido já cadastrado'))
-        .then(async () => {
-            await purchasesRepository.create(newPurchase);
-
-            setTimeout(updatePurchaseByLojaIntegrada, 0, newPurchase.loja_integrada_pedido_id);
-
-            return newPurchase;
-        });
-}
-
-function createByLojaIntegradaPedido(pedido) {
-    // TODO
-    return Promise.resolve({
-        id: uuid.v4(),
-        pedido
-    });
-}
-
-async function updatePurchaseByLojaIntegrada(loja_integrada_pedido_id) {
-    try {
-        const pedido = await lojaIntegrada.getPedidoDetail(loja_integrada_pedido_id);
-        let purchase = await purchasesRepository.find({ loja_integrada_pedido_id });
-        let customer = await customersService.find({ loja_integrada_cliente_id: pedido.cliente.id });
-        let custom_info;
-
-        if (purchase) {
-            custom_info = {
-                aws_logo_path: purchase.aws_logo_path,
-                custom_name: purchase.custom_name,
-                custom_phone: purchase.custom_phone,
-                rank: purchase.rank,
+            if (purchase) {
+                custom_info = {
+                    aws_logo_path: purchase.aws_logo_path,
+                    custom_name: purchase.custom_name,
+                    custom_phone: purchase.custom_phone,
+                    rank: purchase.rank,
+                }
             }
+
+            if (!customer) {
+                customer = await customersService.createByLojaIntegradaCliente(pedido.cliente, custom_info);
+            }
+
+            if (!purchase) {
+                purchase = await createByLojaIntegradaPedido(pedido, customer);
+            } else {
+                customersService.updateLojaIntegradaInfo(customer.id, {
+                    name: pedido.nome,
+                    cellphone: pedido.telefone_celular,
+                    phone: pedido.telefone_principal,
+                }, custom_info);
+
+                purchasesRepository.updateById(purchase.id, { customer_id: customer.id });
+            }
+
+            // TODO: If package is published
+            // Customizer.PurchaseById(purchase);
+        } catch (error) {
+            console.error('Não foi possível atualizar o cliente do Pedido!');
+            console.error(error);
+            throw error;
         }
-
-        if (!customer) {
-            customer = await customersService.createByLojaIntegradaCliente(pedido.cliente, custom_info);
-        }
-
-        if (!purchase) {
-            purchase = await createByLojaIntegradaPedido(pedido, customer);
-        } else {
-            customersService.updateLojaIntegradaInfo(customer.id, {
-                name: pedido.nome,
-                cellphone: pedido.telefone_celular,
-                phone: pedido.telefone_principal,
-            }, custom_info);
-
-            purchasesRepository.updateById(purchase.id, { customer_id: customer.id });
-        }
-
-        // TODO: If package is published
-        // Customizer.PurchaseById(purchase);
-    } catch (error) {
-        console.error('Não foi possível atualizar o cliente do Pedido!');
-        console.error(error);
-        throw error;
     }
 }
 
-function findById(id) {
-    return purchasesRepository.findOne({ id });
-}
-
-module.exports = {
-    create,
-    updateById,
-    deleteById,
-    find,
-    findById,
-    getGallery,
-    generateUrlToLogoUpload,
-    createPurchaseWithLogo
-};
+module.exports = PurchasesService;
