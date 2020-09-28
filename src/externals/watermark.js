@@ -38,7 +38,17 @@ const { findByPackageId } = require('../services/PackagePostsService')
 /**
  * @typedef Purchase
  * @property { String } id
+ * @property { String } customer_id
  * @property { String } package_id
+ * @property { String } loja_integrada_pedido_id
+ * @property { 0 | 1 } is_paid
+ * @property { 0 | 1 } is_removed
+ * @property { Date } cerated_at
+ * @property { Date } updated_at
+ * @property { Date } removed_at
+ * @property { String } custom_name
+ * @property { String } custom_phone
+ * @property { String } rank
  * @property { String } aws_logo_path
  */
 
@@ -65,7 +75,7 @@ async function buildProcessorBody(purchase) {
         transactionId: purchase.id,
         feedbackUrl: process.env.FEEDBACK_URL,
         watermarkPath: purchase.aws_logo_path,
-        images: items.map(item => {
+        images: (items || []).map(item => {
             let extension = mime.extension(mime.lookup(item.aws_path))
             extension = extension ? '.' + extension : ''
 
