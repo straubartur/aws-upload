@@ -64,7 +64,7 @@ async function rule (dataRule, fnValidate) {
 function createPurchasePost(purchase, post) {
     const id = uuid.v4()
     let aws_path, aws_path_thumb
-    let watermark_status = ''
+    let watermark_status = 'queued'
 
     if (post.is_customizable) {
         let extension = mime.extension(post.content_type)
@@ -74,7 +74,7 @@ function createPurchasePost(purchase, post) {
         aws_path_thumb = `purchases/${purchase.id}/posts/thumb-${id}${extension}`
     } else {
         aws_path = post.aws_path
-        watermark_status = 'processed'
+        watermark_status = 'success'
     }
 
     return {
