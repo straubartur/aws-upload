@@ -34,16 +34,19 @@ knex.migrate.rollback(null, true)
 
 // app.get('/api/force-varzea', async (req, res) => {
 //     const service = require('./src/services/PurchasesService')
-//     const { buildProcessorBody, sendPackageToProcess }  = require('./src/externals/watermark')
+//     const purchaseManager = require('./src/managers/purchase-manager')
 
-//     const packageId = req.query.packageId || '88d10d26-b4e5-4b81-bcaf-1bd3ae37b277'
-//     const purchase = await service.findById(packageId)
-//     const requestBody = await buildProcessorBody(purchase)
-//     sendPackageToProcess([requestBody])
+//     const purchaseId = req.query.purchaseId || '88d10d26-b4e5-4b81-bcaf-1bd3ae37b277'
+//     const PurchasesService = new service()
+
+//     const purchase = await PurchasesService.findById(purchaseId)
+//     const body = await purchaseManager.syncPurchasePosts(purchase)
+
 //     res.send({
 //         message: 'I S2 Straubers!',
 //         data: {
-//             packageId,
+//             purchaseId,
+//             body,
 //             purchase
 //         }
 //     })
