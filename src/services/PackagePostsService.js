@@ -79,11 +79,11 @@ class PackagePostsService extends PackagePostsRepository {
         return `packages/${packageId}/posts/${postId}${ext}`;
     }
 
-    async generateUrlToPostUpload(packageId, contentType) {
+    async generateUrlToPostUpload(packageId, content_type) {
         const id = uuid.v4();
-        const aws_path = this.getPackagePostPathOfS3(packageId, id, mime.extension(contentType));
+        const aws_path = this.getPackagePostPathOfS3(packageId, id, mime.extension(content_type));
         const uploadURL = await S3.uploadFileBySignedURL(aws_path);
-        return { id, aws_path, uploadURL };
+        return { id, aws_path, content_type, uploadURL };
     }
 }
 
