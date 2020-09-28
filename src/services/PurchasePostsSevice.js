@@ -16,7 +16,6 @@ const PurchasesService = require('./PurchasesService');
  */
 
  class PurchasePostsService extends PurchasePostsRepository {
-
     /**
      * Find the values of database
      * @param { import('knex').Where } where
@@ -26,14 +25,6 @@ const PurchasesService = require('./PurchasesService');
      */
     find(where, select = '*', options = { pagination: false }) {
         return super.find(where, select, options)
-    }
-
-    /**
-     * @param { PurchasePost } newPost
-     * @return { import('knex').QueryBuilder<TRecord, TResult2> }
-     */
-    create(newPost) {
-        return super.create(newPost);
     }
 }
 
