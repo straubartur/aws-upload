@@ -1,5 +1,6 @@
-const purchasePostsService = require('../services/PurchasePostsSevice')
-const packagesPostsService = require('../services/PackagePostsService')
+const PurchasePostsService = require('../services/PurchasePostsSevice')
+const PackagesPostsService = require('../services/PackagePostsService')
+const { getTransaction } = require('../database/knex');
 const rules = require('./purchase-rules')
 const watermark = require('../externals/watermark')
 const uuid = require('uuid')
@@ -62,35 +63,42 @@ async function syncPurchasePosts (purchase) {
         return false
     }
 
+    const packagesPostsService = new PackagesPostsService();
     const posts = await packagesPostsService.findByPackageId(purchase.package_id)
 
     if (posts.data && !posts.data.length) {
         return false
     }
 
-    posts.data.forEach(async post => {
-        const postExists = await existsPurchasePost(purchase.id, post.id)
-
-        if (!postExists) {
-            const id = uuid.v4()
-            let extension = mime.extension(mime.lookup(post.aws_path))
-            extension = extension ? '.' + extension : ''
-            /**
-             * @type { import('../services/PurchasePostsSevice').PurchasePost }
-             */
-            const newPost = {
-                id,
-                package_post_id: post.id,
-                purchase_id: purchase.id,
-                aws_path: `purchases/${purchase.id}/posts/${id}${extension}`,
-                aws_path_thumb: `purchases/${purchase.id}/posts/thumb-${id}${extension}`,
-                watermark_status: '',
-                is_removed: 0,
-                created_at: new Date()
+    const trx = getTransaction();
+    const purchasePostsService = new PurchasePostsService(trx);
+    try {
+        posts.data.forEach(async post => {
+            const postExists = await existsPurchasePost(purchase.id, post.id)
+    
+            if (!postExists) {
+                const id = uuid.v4()
+                let extension = mime.extension(mime.lookup(post.aws_path))
+                extension = extension ? '.' + extension : ''
+                /**
+                 * @type { import('../services/PurchasePostsSevice').PurchasePost }
+                 */
+                const newPost = {
+                    id,
+                    package_post_id: post.id,
+                    purchase_id: purchase.id,
+                    aws_path: `purchases/${purchase.id}/posts/${id}${extension}`,
+                    aws_path_thumb: `purchases/${purchase.id}/posts/thumb-${id}${extension}`,
+                    watermark_status: ''
+                }
+                await purchasePostsService.create(newPost)
             }
-            await purchasePostsService.create(newPost)
-        }
-    })
+        });
+        trx.commit();
+    } catch {
+        trx.rollback();
+        return false;
+    }
 
     setTimeout(watermark.processByPurchase, 0, purchase)
 
@@ -104,6 +112,7 @@ async function syncPurchasePosts (purchase) {
  * @return { Promise<Boolean> }
  */
 async function existsPurchasePost (purchase_id, package_post_id) {
+    const purchasePostsService = new PurchasePostsService();
     const post = await purchasePostsService.find({ purchase_id, package_post_id, is_removed: 0 })
     return Boolean(post.data.length)
 }
