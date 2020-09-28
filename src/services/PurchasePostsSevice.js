@@ -18,7 +18,7 @@ const PurchasesService = require('./PurchasesService');
  class PurchasePostsService extends PurchasePostsRepository {
 
     /**
-     * Find the values o dabase
+     * Find the values of database
      * @param { import('knex').Where } where
      * @param { string } select
      * @param { Object } options
