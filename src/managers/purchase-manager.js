@@ -11,6 +11,10 @@ const mime = require('mime-types')
  */
 
 /**
+ * @typedef { import('../services/PurchasePostsSevice').PurchasePost } PurchasePost
+ */
+
+/**
  * @typedef DataRule
  * @property { Boolean } isValid
  * @property { Purchase } data
@@ -52,6 +56,36 @@ async function rule (dataRule, fnValidate) {
 }
 
 /**
+ * Create a PurchasePost of Purchase using a PackagePost.
+ * @param { Purchase } purchase
+ * @param { PackagePost } post
+ * @returns { PurchasePost }
+ */
+function createPurchasePost(purchase, post) {
+    const id = uuid.v4()
+    let aws_path, aws_path_thumb
+
+    if (post.is_customizable) {
+        let extension = mime.extension(post.content_type)
+        extension = extension ? '.' + extension : ''
+
+        aws_path = `purchases/${purchase.id}/posts/${id}${extension}`
+        aws_path_thumb = `purchases/${purchase.id}/posts/thumb-${id}${extension}`
+    } else {
+        aws_path = post.aws_path
+    }
+
+    return {
+        id,
+        package_post_id: post.id,
+        purchase_id: purchase.id,
+        watermark_status: '',
+        aws_path,
+        aws_path_thumb
+    }
+}
+
+/**
  * Sync the values from Packages_posts to Purchase_posts
  * @param { Purchase } purchase
  * @return { Promise<Boolean> }
@@ -78,22 +112,7 @@ async function syncPurchasePosts (purchase) {
             const postExists = await existsPurchasePost(purchase.id, post.id)
 
             if (!postExists) {
-                const id = uuid.v4()
-                let extension = mime.extension(mime.lookup(post.aws_path))
-                extension = extension ? '.' + extension : ''
-
-                /**
-                 * @type { import('../services/PurchasePostsSevice').PurchasePost }
-                 */
-                const newPost = {
-                    id,
-                    package_post_id: post.id,
-                    purchase_id: purchase.id,
-                    aws_path: `purchases/${purchase.id}/posts/${id}${extension}`,
-                    aws_path_thumb: `purchases/${purchase.id}/posts/thumb-${id}${extension}`,
-                    watermark_status: ''
-                }
-
+                const newPost = createPurchasePost(purchase, post)
                 return purchasePostsService.create(newPost)
             }
 
