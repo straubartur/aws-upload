@@ -2,10 +2,23 @@ const uuid = require('uuid');
 const PurchasesRepository = require('../repositories/PurchasesRepository');
 const CustomersService = require('../services/CustomersService');
 const PackagesService = require('../services/PackagesService');
+const PurchasePostsService = require('../services/PurchasePostsSevice');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
 const { syncPurchasePosts } = require('../managers/purchase-manager');
 const { buildPostResponse } = require('../utils/buildPostResponse');
+
+/**
+ * @typedef ProcessorResponse
+ * @property { String } transactionId
+ * @property { Array<ProcessorResponseImage> } images
+ */
+
+/**
+ * @typedef ProcessorResponseImage
+ * @property { String } postId
+ * @property { 'success' | 'error' } status
+ */
 
 function throwIfExist(message) {
     return (result) => {
@@ -170,6 +183,52 @@ class PurchasesService extends PurchasesRepository {
             console.error(error);
             throw error;
         }
+    }
+
+    /**
+     * Sync status according the processor response
+     * @param { ProcessorResponse } response - The processor response
+     * @return { Promise<Boolean> }
+     */
+    async processingResponse (response) {
+        if (
+            !response ||
+            (response && !response.transactionId) ||
+            (response && Array.isArray(response.images) && !response.images.length)
+        ) {
+            this.trx.rollback()
+            return false
+        }
+
+        let purchaseStatus = 'success'
+
+        const purchasePostsService = new PurchasePostsService(this.trx)
+        const promises = response.images.map(async image => {
+            if (image.status === 'error') {
+                purchaseStatus = 'error'
+            }
+
+            return purchasePostsService.updateById(image.postId, {
+                watermark_status: image.status
+            })
+        })
+
+        return Promise.all(promises)
+            .then(() => {
+                return this.updateById(response.transactionId, {
+                    watermark_status: purchaseStatus
+                })
+            })
+            .then(() => {
+                this.trx.commit()
+                return true
+            })
+            .catch((error) => {
+                console.log('Não foi possível atualizar os status dos posts')
+                console.log(error)
+                this.trx.rollback()
+                return false
+            })
     }
 }
 
