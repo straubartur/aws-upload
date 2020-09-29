@@ -2,10 +2,23 @@ const uuid = require('uuid');
 const PurchasesRepository = require('../repositories/PurchasesRepository');
 const CustomersService = require('../services/CustomersService');
 const PackagesService = require('../services/PackagesService');
+const PurchasePostsService = require('../services/PurchasePostsSevice');
 const S3 = require('../externals/s3');
 const lojaIntegrada = require('../externals/lojaIntegrada');
 const { syncPurchasePosts } = require('../managers/purchase-manager');
 const { buildPostResponse } = require('../utils/buildPostResponse');
+
+/**
+ * @typedef ProcessorResponse
+ * @property { String } transactionId
+ * @property { Array<ProcessorResponseImage> } images
+ */
+
+/**
+ * @typedef ProcessorResponseImage
+ * @property { String } postId
+ * @property { 'success' | 'error' } status
+ */
 
 function throwIfExist(message) {
     return (result) => {
@@ -174,6 +187,46 @@ class PurchasesService extends PurchasesRepository {
             console.error(error);
             throw error;
         }
+    }
+
+    /**
+     * Sync status according the processor response
+     * @param { ProcessorResponse } response - The processor response
+     * @return { Promise }
+     * @throws { Error }
+     */
+    async processingResponse (response) {
+        if (
+            !response ||
+            (response && !response.transactionId) ||
+            (response && Array.isArray(response.images) && !response.images.length)
+        ) {
+            throw new Error('Response inválid')
+        }
+
+        let purchaseStatus = 'success'
+
+        const purchasePostsService = new PurchasePostsService(this.trx)
+        const promises = response.images.map(async image => {
+            if (image.status === 'error') {
+                purchaseStatus = 'error'
+            }
+
+            return purchasePostsService.updateById(image.postId, {
+                watermark_status: image.status
+            })
+        })
+
+        const promisePurchase = this.updateById(response.transactionId, {
+            watermark_status: purchaseStatus
+        })
+
+        promises.push(promisePurchase)
+
+        return Promise.all(promises)
+            .catch(() => {
+                throw new Error('Não foi possível atualizar os status dos posts')
+            })
     }
 }
 
