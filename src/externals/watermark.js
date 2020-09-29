@@ -103,12 +103,12 @@ function sendPackageToProcess(data) {
  * @param { Purchase } purchase - The puchase Object
  */
 async function processByPurchase(purchase) {
-    const trx = getTransaction()
+    const trx = await getTransaction()
     const purchasePostsSevice = new PurchasePostsSevice(trx)
     const purchasesService = new PurchasesService(trx)
 
     try {
-        const posts = await purchasePostsSevice.findPostsByWatermarkStatus(purchase.id, 'queued').data
+        const posts = await purchasePostsSevice.findPostsByWatermarkStatus(purchase.id, 'queued')
 
         if (posts.length) {
             const requestBody = await buildProcessorBody(purchase, posts)

@@ -1,5 +1,3 @@
-const PackagesService = require('../services/PackagesService')
-
 /**
  * @typedef { import('./purchase-manager').Purchase } Purchase
  */
@@ -28,6 +26,7 @@ function hasAwsLogo (purchase) {
  * @return { Boolean }
  */
 async function hasPackagePublished (purchase) {
+    const PackagesService = require('../services/PackagesService')
     const packagesService = new PackagesService()
     const package = await packagesService.findById(purchase.package_id)
     return package.is_published === 1
