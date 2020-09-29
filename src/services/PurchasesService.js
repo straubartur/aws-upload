@@ -189,6 +189,7 @@ class PurchasesService extends PurchasesRepository {
      * Sync status according the processor response
      * @param { ProcessorResponse } response - The processor response
      * @return { Promise }
+     * @throws { Error }
      */
     async processingResponse (response) {
         if (
