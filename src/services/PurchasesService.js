@@ -41,6 +41,10 @@ class PurchasesService extends PurchasesRepository {
             .then(() => setTimeout(syncPurchasePosts, 0, purchase));
     }
 
+    updateWatermarkStatus(id, status) {
+        return this.updateById(id, { watermark_status: status })
+    }
+
     findByLojaIntegradaPedidoId(loja_integrada_pedido_id) {
         return loja_integrada_pedido_id ? purchasesRepository.findOne({ loja_integrada_pedido_id }) : Promise.resolve();
     }

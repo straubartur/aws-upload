@@ -26,6 +26,10 @@ const PurchasesService = require('./PurchasesService');
     find(where, select = '*', options = { pagination: false }) {
         return super.find(where, select, options)
     }
+
+    updateWatermarkStatus(id, status) {
+        return this.updateById(id, { watermark_status: status })
+    }
 }
 
 module.exports = PurchasePostsService;
