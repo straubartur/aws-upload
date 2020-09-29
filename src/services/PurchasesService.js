@@ -1,11 +1,7 @@
 const uuid = require('uuid');
 const PurchasesRepository = require('../repositories/PurchasesRepository');
-const CustomersService = require('../services/CustomersService');
-const PackagesService = require('../services/PackagesService');
 const PurchasePostsService = require('../services/PurchasePostsSevice');
 const S3 = require('../externals/s3');
-const lojaIntegrada = require('../externals/lojaIntegrada');
-const { syncPurchasePosts } = require('../managers/purchase-manager');
 const { buildPostResponse } = require('../utils/buildPostResponse');
 
 /**
@@ -45,11 +41,11 @@ class PurchasesService extends PurchasesRepository {
         super(trx);
     }
 
-    create(purchase) {
+    async create(purchase) {
         purchase.id = purchase.id || uuid.v4();
-
-        return super.create(purchase)
-            .then(() => setTimeout(syncPurchasePosts, 0, purchase));
+        await super.create(purchase)
+        const purchaseManager = require('../managers/purchase-manager');
+        setTimeout(purchaseManager.syncPurchasePosts, 0, purchase);
     }
 
     updateWatermarkStatus(id, status) {
@@ -65,10 +61,6 @@ class PurchasesService extends PurchasesRepository {
                 .then(throwIfNotExist('Compra não encontrada!'))
                 .then(async (purchase) => {
                     const groupPosts = await this.getPostsGroupByCategories(purchase.id);
-                    const customersService = new CustomersService(this.trx);
-                    const packagesService = new PackagesService(this.trx);
-                    const customer = await customersService.findById(purchase.customer_id);
-                    const pkg = await packagesService.findById(purchase.package_id);
 
                     return {
                         purchase: {
@@ -76,15 +68,6 @@ class PurchasesService extends PurchasesRepository {
                             customer_id: purchase.customer_id,
                             package_id: purchase.package_id,
                             loja_integrada_pedido_id: purchase.loja_integrada_pedido_id,
-                        },
-                        customer: {
-                            id: customer.id,
-                            name: customer.name
-                        },
-                        package: {
-                            id: pkg.id,
-                            name: pkg.name,
-                            description: pkg.description
                         },
                         postsByCategory: groupPosts
                     }
@@ -138,55 +121,6 @@ class PurchasesService extends PurchasesRepository {
 
                 return newPurchase;
             });
-    }
-
-    createByLojaIntegradaPedido(pedido) {
-        // TODO
-        return Promise.resolve({
-            id: uuid.v4(),
-            pedido
-        });
-    }
-
-    async updatePurchaseByLojaIntegrada(loja_integrada_pedido_id) {
-        try {
-            const pedido = await lojaIntegrada.getPedidoDetail(loja_integrada_pedido_id);
-            let purchase = await purchasesRepository.find({ loja_integrada_pedido_id });
-            let customer = await customersService.find({ loja_integrada_cliente_id: pedido.cliente.id });
-            let custom_info;
-
-            if (purchase) {
-                custom_info = {
-                    aws_logo_path: purchase.aws_logo_path,
-                    custom_name: purchase.custom_name,
-                    custom_phone: purchase.custom_phone,
-                    rank: purchase.rank,
-                }
-            }
-
-            if (!customer) {
-                customer = await customersService.createByLojaIntegradaCliente(pedido.cliente, custom_info);
-            }
-
-            if (!purchase) {
-                purchase = await createByLojaIntegradaPedido(pedido, customer);
-            } else {
-                customersService.updateLojaIntegradaInfo(customer.id, {
-                    name: pedido.nome,
-                    cellphone: pedido.telefone_celular,
-                    phone: pedido.telefone_principal,
-                }, custom_info);
-
-                purchasesRepository.updateById(purchase.id, { customer_id: customer.id });
-            }
-
-            // TODO: If package is published
-            // Customizer.PurchaseById(purchase);
-        } catch (error) {
-            console.error('Não foi possível atualizar o cliente do Pedido!');
-            console.error(error);
-            throw error;
-        }
     }
 
     /**

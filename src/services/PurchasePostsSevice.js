@@ -1,5 +1,4 @@
 const PurchasePostsRepository = require('../repositories/PurchasePostsRepository');
-const PurchasesService = require('./PurchasesService');
 
 /**
  * @typedef PurchasePost

@@ -1,6 +1,5 @@
 const uuid = require('uuid');
 const PackageRepository = require('../repositories/PackagesRepository');
-const PackagePostsService = require('../services/PackagePostsService');
 const { syncPurchasePostsByPackageId } = require('../managers/purchase-manager');
 
 class PackagesService extends PackageRepository {
@@ -16,6 +15,7 @@ class PackagesService extends PackageRepository {
             await this.create({ id, name, description });
         }
 
+        const PackagePostsService = require('../services/PackagePostsService');
         const packagePostsService = new PackagePostsService(this.trx);
         await packagePostsService.savePosts(posts, id);
     }
@@ -37,6 +37,7 @@ class PackagesService extends PackageRepository {
         return super.findById(id)
             .then(async pkg => {
                 if (pkg) {
+                    const PackagePostsService = require('../services/PackagePostsService');
                     const packagePostsService = new PackagePostsService(this.trx);
                     const { data } = await packagePostsService.find({ package_id: pkg.id }, '*', { pagination: false });
                     pkg.posts = data || [];
@@ -54,6 +55,7 @@ class PackagesService extends PackageRepository {
         const packageId = pkgId ? pkgId : uuid.v4();
 
         const generateUrls = contentTypeList.map(contentType => {
+            const PackagePostsService = require('../services/PackagePostsService');
             const packagePostsService = new PackagePostsService(this.trx);
             return packagePostsService.generateUrlToPostUpload(packageId, contentType['Content-Type']);
         });

@@ -1,5 +1,7 @@
 const { buildMessage } = require('../utils/buildMessage');
 const { getTransaction } = require('../database/knex');
+const CustomersService = require('../services/CustomersService');
+const PackagesService = require('../services/PackagesService');
 const PurchasesService = require('../services/PurchasesService');
 
 function getPurchases (req, res) {
@@ -87,17 +89,34 @@ async function deletePurchases (req, res) {
         });
 }
 
-function getGallery (req, res) {
+async function getGallery (req, res) {
     const { id } = req.params
 
     const purchasesService = new PurchasesService();
+    const customersService = new CustomersService();
+    const packagesService = new PackagesService();
 
-    purchasesService.getGallery(id)
-        .then(result => res.status(200).json(result))
-        .catch(error => {
-            console.log(error);
-            res.status(500).json(buildMessage('Ops! Algo deu errado =['));
-        });
+    try {
+        const gallery = await purchasesService.getGallery(id);
+        const customer = await customersService.findById(gallery.purchase.customer_id);
+        const pkg = await packagesService.findById(gallery.purchase.package_id);
+        
+        gallery.customer = {
+            id: customer.id,
+            name: customer.name
+        }
+    
+        gallery.package = {
+            id: pkg.id,
+            name: pkg.name,
+            description: pkg.description
+        }
+    
+        res.status(200).json(gallery)
+    } catch (error) {
+        console.log(error);
+        res.status(500).json(buildMessage('Ops! Algo deu errado =['));
+    }
 }
 
 function generateLogoUrl (req, res) {
