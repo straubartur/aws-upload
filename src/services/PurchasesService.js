@@ -188,7 +188,7 @@ class PurchasesService extends PurchasesRepository {
     /**
      * Sync status according the processor response
      * @param { ProcessorResponse } response - The processor response
-     * @return { Promise<Boolean> }
+     * @return { Promise }
      */
     async processingResponse (response) {
         if (
@@ -196,8 +196,7 @@ class PurchasesService extends PurchasesRepository {
             (response && !response.transactionId) ||
             (response && Array.isArray(response.images) && !response.images.length)
         ) {
-            this.trx.rollback()
-            return false
+            throw new Error('Response inválid')
         }
 
         let purchaseStatus = 'success'
@@ -213,21 +212,15 @@ class PurchasesService extends PurchasesRepository {
             })
         })
 
+        const promisePurchase = this.updateById(response.transactionId, {
+            watermark_status: purchaseStatus
+        })
+
+        promises.push(promisePurchase)
+
         return Promise.all(promises)
-            .then(() => {
-                return this.updateById(response.transactionId, {
-                    watermark_status: purchaseStatus
-                })
-            })
-            .then(() => {
-                this.trx.commit()
-                return true
-            })
-            .catch((error) => {
-                console.log('Não foi possível atualizar os status dos posts')
-                console.log(error)
-                this.trx.rollback()
-                return false
+            .catch(() => {
+                throw new Error('Não foi possível atualizar os status dos posts')
             })
     }
 }
