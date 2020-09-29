@@ -6,6 +6,7 @@ const authMiddleware = require('../middlewares/Auth')
 purchasesRoutes.get('/gallery/:id', PurchasesController.getGallery);
 purchasesRoutes.get('/generate-logo-url', PurchasesController.generateLogoUrl);
 purchasesRoutes.post('/new', PurchasesController.createPurchaseWithLogo);
+purchasesRoutes.post('/processing-response', PurchasesController.processingResponse);
 
 purchasesRoutes.use(authMiddleware)
 
