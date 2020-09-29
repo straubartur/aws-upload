@@ -122,17 +122,14 @@ async function syncPurchasePosts (purchase) {
             return Promise.resolve(true)
         })
 
-        return Promise.all(promises)
-            .then(async () => {
-                await trx.commit()
-                setTimeout(watermark.processByPurchase, 0, purchase)
-                return true
-            })
-            .catch((async (_) => {
-                await trx.rollback()
-                return false
-            }))
-    } catch {
+        await Promise.all(promises)
+        await trx.commit()
+
+        setTimeout(watermark.processByPurchase, 0, purchase)
+
+        return true
+    } catch (error) {
+        console.log(error)
         trx.rollback()
         return false
     }

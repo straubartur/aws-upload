@@ -1,7 +1,8 @@
 require('dotenv').config()
-const http = require('http')
-const mime = require('mime-types')
-const PackagePostsService = require('../services/PackagePostsService')
+const axios = require('axios');
+const PurchasePostsSevice = require('../services/PurchasePostsSevice')
+const PurchasesService = require('../services/PurchasesService')
+const { getTransaction } = require('../database/knex')
 
 /**
  * @typedef ProcessorBody
@@ -66,21 +67,12 @@ const PackagePostsService = require('../services/PackagePostsService')
  * @param { Purchase } purchase
  * @return { ProcessorBody }
  */
-async function buildProcessorBody(purchase) {
-    const packagePostsService = new PackagePostsService()
-    /**
-     * @type { Array<PurchaseItem> }
-     */
-    const items = await packagePostsService.find({ package_id: purchase.package_id, is_customizable: true }).data
-
+function buildProcessorBody(purchase, items) {
     return {
         transactionId: purchase.id,
         feedbackUrl: process.env.FEEDBACK_URL,
         watermarkPath: purchase.aws_logo_path,
         images: (items || []).map(item => {
-            let extension = mime.extension(item.content_type)
-            extension = extension ? '.' + extension : ''
-
             return {
                 positions: {
                     x: Number(item.coordinate_x) || 0,
@@ -89,8 +81,8 @@ async function buildProcessorBody(purchase) {
                     width: 150
                 },
                 postId: item.id,
-                baseImagePath: item.aws_path,
-                s3ImagePath: `purchases/${purchase.id}/posts/${item.id}${extension}`
+                baseImagePath: item.aws_path_base,
+                s3ImagePath: item.aws_path
             }
         })
     }
@@ -101,45 +93,9 @@ async function buildProcessorBody(purchase) {
  * @param { Array<ProcessorBody> } data
  */
 function sendPackageToProcess(data) {
-    const body = JSON.stringify(data)
-    const urlDetails = getUrlDetails(process.env.IMAGE_PROCESSOR_API)
-    const options = {
-        hostname: urlDetails.hostname,
-        port: urlDetails.port,
-        path: `${urlDetails.pathname}${urlDetails.search}`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': body.length
-        }
-    }
-
-    const req = http.request(options)
-
-    req.on('error', error => console.log('Error: could not be fire a request', error))
-    req.write(body)
-    req.end()
-}
-
-/**
- * Returns the details from URL
- * @param { string } url - The URL
- * @return { URLDetail }
- */
-function getUrlDetails(url) {
-    if (!url || typeof url !== 'string') {
-        return
-    }
-
-    const { hostname, protocol, port, pathname, search } = new URL(url)
-
-    return {
-        hostname,
-        protocol,
-        port: Number(port) || 80,
-        pathname,
-        search
-    }
+    return axios.post(process.env.IMAGE_PROCESSOR_API, data, {
+        headers: { 'Content-Type': 'application/json' }
+    });
 }
 
 /**
@@ -147,8 +103,26 @@ function getUrlDetails(url) {
  * @param { Purchase } purchase - The puchase Object
  */
 async function processByPurchase(purchase) {
-    const requestBody = await buildProcessorBody(purchase)
-    sendPackageToProcess([requestBody])
+    const trx = getTransaction()
+    const purchasePostsSevice = new PurchasePostsSevice(trx)
+    const purchasesService = new PurchasesService(trx)
+
+    try {
+        const posts = await purchasePostsSevice.findPostsByWatermarkStatus(purchase.id, 'queued').data
+
+        if (posts.length) {
+            const requestBody = await buildProcessorBody(purchase, posts)
+            await sendPackageToProcess([requestBody])
+
+            const updatePostsPromise = posts.map(post => purchasePostsSevice.updateWatermarkStatus(post.id, 'processing'))
+            await Promise.all(updatePostsPromise)
+            await purchasesService.updateWatermarkStatus(purchase.id, 'processing')
+            await trx.commit()
+        }
+    } catch (error) {
+        console.log(error)
+        await trx.rollback()
+    }
 }
 
 module.exports = {
