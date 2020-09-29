@@ -1,64 +1,65 @@
 const uuid = require('uuid');
-const PackageRepository = require('../repositories/PackagesRepository');
-const PackagePostsService = require('../services/PackagePostsService');
+const packageRepository = require('../repositories/PackagesRepository');
+// const packagePostsService = require('../services/PackagePostsService');
 const { syncPurchasePostsByPackageId } = require('../managers/purchase-manager');
 
-class PackagesService extends PackageRepository {
-    constructor(trx) {
-        super(trx);
-        this.packagePostsService = new PackagePostsService(this.trx);
+
+async function save(trx, { id, name, description, posts }) {
+    const oldPackage = await findById(trx, id);
+    if (oldPackage) {
+        await updateById(trx, oldPackage.id, { name, description });
+    } else {
+        await create(trx, { id, name, description });
     }
 
-    async save({ id, name, description, posts }) {
-        const oldPackage = await this.findById(id);
-        if (oldPackage) {
-            await this.updateById(oldPackage.id, { name, description });
-        } else {
-            await this.create({ id, name, description });
-        }
-
-        await this.packagePostsService.savePosts(posts, id);
-    }
-
-    create(newPackage) {
-        delete newPackage.is_published;
-
-        return super.create(newPackage)
-            .then(() => newPackage);
-    }
-
-    updateById(id, pkg) {
-        delete pkg.is_published;
-        return super.updateById(id, pkg)
-            .then(() => setTimeout(syncPurchasePostsByPackageId, 0, id));
-    }
-
-    findById(id) {
-        return super.findById(id)
-            .then(async pkg => {
-                if (pkg) {
-                    const { data } = await this.packagePostsService.find({ package_id: pkg.id }, '*', { pagination: false });
-                    pkg.posts = data || [];
-                }
-                return pkg;
-            });
-    }
-
-    publishPackage(id) {
-        return super.updateById(id, { is_published: true })
-            .then(() => setTimeout(syncPurchasePostsByPackageId, 0, id));
-    }
-
-    generateUrls(pkgId, contentTypeList) {
-        const packageId = pkgId ? pkgId : uuid.v4();
-
-        const generateUrls = contentTypeList.map(contentType => {
-            return this.packagePostsService.generateUrlToPostUpload(packageId, contentType['Content-Type']);
-        });
-
-        return Promise.all(generateUrls)
-            .then(posts => ({ id: packageId, posts }));
-    }
+    // await packagePostsService.savePosts(trx, posts, id);
 }
 
-module.exports = PackagesService;
+function create(trx, newPackage) {
+    delete newPackage.is_published;
+
+    return packageRepository.create(trx, newPackage)
+        .then(() => newPackage);
+}
+
+async function updateById(trx, id, pkg) {
+    delete pkg.is_published;
+    await packageRepository.updateById(trx, id, pkg);
+    // setTimeout(syncPurchasePostsByPackageId, 0, id);
+}
+
+function findById(trx, id) {
+    return packageRepository.findById(trx, id)
+    /*
+        .then(async pkg => {
+            if (pkg) {
+                const { data } = await packagePostsService.find(trx, { package_id: pkg.id }, '*', { pagination: false });
+                pkg.posts = data || [];
+            }
+            return pkg;
+        });
+        */
+}
+
+async function publishPackage(trx, id) {
+    await packageRepository.updateById(trx, id, { is_published: true })
+    setTimeout(syncPurchasePostsByPackageId, 0, id)
+}
+
+function generateUrls(pkgId, contentTypeList) {
+    const packageId = pkgId ? pkgId : uuid.v4();
+
+    const generateUrls = contentTypeList.map(contentType => {
+        return packagePostsService.generateUrlToPostUpload(packageId, contentType['Content-Type']);
+    });
+
+    return Promise.all(generateUrls)
+        .then(posts => ({ id: packageId, posts }));
+}
+
+module.exports = {
+    save,
+    findById,
+    publishPackage,
+    generateUrls
+};
