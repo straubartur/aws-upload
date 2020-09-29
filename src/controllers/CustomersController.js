@@ -6,7 +6,7 @@ const customerValidator = require('../validator/CustomerValidator');
 function getCustumers(req, res) {
     const { limit, page, email } = req.query;
     let findPromisse;
-
+    const customersService = new CustomersService();
     if (email) {
         findPromisse = customersService.findByEmail(email);
     } else {
@@ -24,7 +24,6 @@ function getCustumerById (req, res) {
     const { id } = req.params
 
     const customersService = new CustomersService();
-
     customersService.findById(id)
         .then(result => res.status(200).json(result))
         .catch(error => {
