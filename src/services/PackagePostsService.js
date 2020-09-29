@@ -16,14 +16,16 @@ class PackagePostsService extends PackagePostsRepository {
         }
 
         if (!oldPost) {
-            return this.create(post);
+            await this.create(post);
+            return;
         }
 
         if (post.is_removed) {
-            return this.deleteById(oldPost.id, package_id);
+            await this.deleteById(oldPost.id, package_id);
+            return;
         }
 
-        return this.updateById(oldPost.id, post, package_id);
+        await this.updateById(oldPost.id, post, package_id);
     }
 
     create(post) {
@@ -31,7 +33,7 @@ class PackagePostsService extends PackagePostsRepository {
             post.is_customizable = false;
         }
 
-        super.create(post);
+        return super.create(post);
     }
 
     updatePosts(posts, package_id) {
