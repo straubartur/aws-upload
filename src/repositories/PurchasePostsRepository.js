@@ -22,7 +22,9 @@ class PurchasePostsRepository extends BaseRepository {
             })
             .select([
                 'Purchase_posts.*',
-                'Package_posts.aws_path as aws_path_base'
+                'Package_posts.aws_path as aws_path_base',
+                'Package_posts.coordinate_x',
+                'Package_posts.coordinate_y'
             ]);
     }
 }
