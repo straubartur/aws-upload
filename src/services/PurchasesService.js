@@ -43,8 +43,6 @@ function throwIfNotExist(message) {
 class PurchasesService extends PurchasesRepository {
     constructor(trx) {
         super(trx);
-        this.customersService = new CustomersService(this.trx);
-        this.packagesService = new PackagesService(this.trx);
     }
 
     create(purchase) {
@@ -67,8 +65,10 @@ class PurchasesService extends PurchasesRepository {
                 .then(throwIfNotExist('Compra não encontrada!'))
                 .then(async (purchase) => {
                     const groupPosts = await this.getPostsGroupByCategories(purchase.id);
-                    const customer = await this.customersService.findById(purchase.customer_id);
-                    const pkg = await this.packagesService.findById(purchase.package_id);
+                    const customersService = new CustomersService(this.trx);
+                    const packagesService = new PackagesService(this.trx);
+                    const customer = await customersService.findById(purchase.customer_id);
+                    const pkg = await packagesService.findById(purchase.package_id);
 
                     return {
                         purchase: {
