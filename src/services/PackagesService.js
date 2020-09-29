@@ -1,6 +1,7 @@
 const uuid = require('uuid');
 const PackageRepository = require('../repositories/PackagesRepository');
 const PackagePostsService = require('../services/PackagePostsService');
+const { syncPurchasePostsByPackageId } = require('../managers/purchase-manager');
 
 class PackagesService extends PackageRepository {
     constructor(trx) {
@@ -28,7 +29,8 @@ class PackagesService extends PackageRepository {
 
     updateById(id, pkg) {
         delete pkg.is_published;
-        return super.updateById(id, pkg);
+        return super.updateById(id, pkg)
+            .then(() => setTimeout(syncPurchasePostsByPackageId, 0, id));
     }
 
     findById(id) {
@@ -44,11 +46,7 @@ class PackagesService extends PackageRepository {
 
     publishPackage(id) {
         return super.updateById(id, { is_published: true })
-            .then(() => {
-                // TODO: customizar todos os pacotes comprados!
-                // Customizer.AllPurchasesByPackage(pkg);
-                // Usar um setTimeout para não travar a resposta.
-            });
+            .then(() => setTimeout(syncPurchasePostsByPackageId, 0, id));
     }
 
     generateUrls(pkgId, contentTypeList) {

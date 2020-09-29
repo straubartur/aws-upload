@@ -1,3 +1,5 @@
+const PurchasesService = require('../services/PurchasesService')
+const PackagesService = require('../services/PackagesService')
 const PurchasePostsService = require('../services/PurchasePostsSevice')
 const PackagesPostsService = require('../services/PackagePostsService')
 const { getTransaction } = require('../database/knex');
@@ -88,6 +90,17 @@ function createPurchasePost(purchase, post) {
     }
 }
 
+function syncPurchasePostsByPackageId(package_id) {
+    const packagesService = new PackagesService()
+    const pkg = packagesService.findById(package_id)
+
+    if (pkg && pkg.is_published === 1) {
+        const purchasesService = new PurchasesService()
+        const purchases = purchasesService.find({ package_id: pkg.id, is_paid: 1 }).data
+        purchases.forEach(async purchase => await syncPurchasePosts(purchase));
+    }
+}
+
 /**
  * Sync the values from Packages_posts to Purchase_posts
  * @param { Purchase } purchase
@@ -149,5 +162,6 @@ async function existsPurchasePost (purchase_id, package_post_id) {
 
 module.exports = {
     validatePurchase,
-    syncPurchasePosts
+    syncPurchasePosts,
+    syncPurchasePostsByPackageId
 }
