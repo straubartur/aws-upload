@@ -134,6 +134,17 @@ async function createPurchaseWithLogo (req, res) {
         });
 }
 
+/**
+ * @param { import('express').Request } req
+ * @param { import('express').Response } res
+ */
+async function processingResponse (req, res) {
+    const trx = await getTransaction()
+    const purchasesService = new PurchasesService(trx)
+    purchasesService.processingResponse(req.body)
+    res.send('received =)')
+}
+
 module.exports = {
     getPurchases,
     getPurchaseById,
@@ -142,5 +153,6 @@ module.exports = {
     deletePurchases,
     getGallery,
     generateLogoUrl,
-    createPurchaseWithLogo
+    createPurchaseWithLogo,
+    processingResponse
 };
