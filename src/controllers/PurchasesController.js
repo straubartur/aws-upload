@@ -139,9 +139,15 @@ async function createPurchaseWithLogo (req, res) {
  * @param { import('express').Response } res
  */
 async function processingResponse (req, res) {
-    const trx = await getTransaction()
-    const purchasesService = new PurchasesService(trx)
-    purchasesService.processingResponse(req.body)
+    try {
+        const trx = await getTransaction()
+        const purchasesService = new PurchasesService(trx)
+        await purchasesService.processingResponse(req.body)
+        await trx.commit()
+    } catch (error) {
+        console.log(error)
+    }
+
     res.send('received =)')
 }
 
