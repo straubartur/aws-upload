@@ -8,6 +8,7 @@ const PackagePost = Joi.object({
     content_type: Joi.string().required(),
     is_customizable: Joi.valid(0, 1, false, true),
     aws_path: Joi.string().required(),
+    watermark_position: Joi.number().integer().required(),
     coordinate_x:  Joi.string().required(),
     coordinate_y: Joi.string().required(),
     created_at: Joi.date().iso().allow(null),
