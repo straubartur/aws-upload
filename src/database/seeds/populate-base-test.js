@@ -61,7 +61,8 @@ exports.seed = function (knex) {
                     aws_path: 'packages/d1727db1-fa0c-40ec-b9e9-c3814740a230/posts/92dd9938-8e78-48ae-a4b3-d97d305e3947',
                     coordinate_x: 10,
                     coordinate_y: 10,
-                    content_type: 'image/png'
+                    content_type: 'image/png',
+                    watermark_position: 1
                 });
 
                 storyPosts.push({
@@ -72,7 +73,8 @@ exports.seed = function (knex) {
                     aws_path: 'packages/d1727db1-fa0c-40ec-b9e9-c3814740a230/posts/92dd9938-8e78-48ae-a4b3-d97d305e3947',
                     coordinate_x: 10,
                     coordinate_y: 10,
-                    content_type: 'image/png'
+                    content_type: 'image/png',
+                    watermark_position: 1
                 });
             }
             return knex('Package_posts').insert([...feedPosts, ...storyPosts]);
