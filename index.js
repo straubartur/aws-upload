@@ -3,12 +3,8 @@ const express = require('express')
 const app = express()
 const routes = require('./src/routes/routes')
 const { knex } = require('./src/database/knex')
-// const factories = require('./test/factories/productFactory')
-// require('./src/crons/resseler')
 const jwt = require('jsonwebtoken')
-// const busboy = require('connect-busboy');
-// app.use(busboy());
-const cors = require('cors');
+const cors = require('cors')
 
 const token = jwt.sign({
     id: 38,
@@ -17,20 +13,9 @@ const token = jwt.sign({
 
 console.log(token)
 
-// factories.populateDatabase();
 app.use(express.json())
-
 app.use(cors())
 app.use(routes)
-/*
-knex.migrate.rollback(null, true)
-    .then(() => {
-        console.log('Rollback finalizado!');
-    }).catch(err => {
-        console.error('Fudeu!!!!! ---------------------------');
-        console.error(err.message);
-    });
-*/
 
 // app.get('/api/force-varzea', async (req, res) => {
 //     const service = require('./src/services/PurchasesService')
@@ -67,7 +52,6 @@ knex.migrate.latest()
     .catch(err => {
         console.error('--------------------------- Fudeu!!!');
         console.error(err.message);
-
         console.error('--------------------------- Rollback!!!');
         knex.migrate.rollback();
     });

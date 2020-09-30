@@ -9,7 +9,8 @@ function getCategories(req, res) {
 
     const categoriesService = new CategoriesService();
 
-    categoriesService.find(undefined, '*', {
+    categoriesService
+        .find(undefined, '*', {
             pagination: usePagination,
             limit,
             page

@@ -23,7 +23,7 @@ async function login(req, res) {
                     return res.status(403).json(buildMessage('Usuário ou senha incorretos'));
                 }
 
-                const token =  jwt.sign({ id: user.id }, process.env.AUTH_CONFIG, { expiresIn: 600 })
+                const token = jwt.sign({ id: user.id }, process.env.AUTH_CONFIG, { expiresIn: 600 })
 
                 return res.status(200).json(buildMessage('Login realizado com sucesso', { token }));
             });
