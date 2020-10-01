@@ -8,7 +8,7 @@
  * @return { Boolean }
  */
 function isPaid (purchase) {
-    return purchase.is_paid === 1
+    return purchase.is_paid === 1 || purchase.is_paid === true
 }
 
 /**
