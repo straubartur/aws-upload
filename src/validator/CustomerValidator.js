@@ -7,7 +7,7 @@ const CustomerValidator = Joi.object({
     phone: Joi.string().allow(null),
     rank: Joi.string().allow(null),
     custom_name: Joi.string().allow(null),
-    custom_phone: Joi.string().allow(null),
+    custom_phone: Joi.string().allow(null, ''),
     loja_integrada_cliente_id: Joi.number().integer().allow(null),
     created_at: Joi.date().iso().allow(null),
     updated_at: Joi.date().iso().allow(null),
