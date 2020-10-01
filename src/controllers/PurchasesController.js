@@ -3,6 +3,7 @@ const { getTransaction } = require('../database/knex');
 const CustomersService = require('../services/CustomersService');
 const PackagesService = require('../services/PackagesService');
 const PurchasesService = require('../services/PurchasesService');
+const purchaseValidator = require('../validator/PurchaseValidator');
 
 function getPurchases (req, res) {
     const { limit, page } = req.query;
@@ -33,7 +34,11 @@ function getPurchaseById (req, res) {
 async function createPurchases (req, res) {
     const purchase = req.body || {};
 
-    // TODO: Add validation schema
+    const { error } = purchaseValidator.validate(purchase);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
 
     const trx = await getTransaction();
     const purchasesService = new PurchasesService(trx);
@@ -54,7 +59,11 @@ async function updatePurchases (req, res) {
     const { id } = req.params;
     const purchase = req.body || {};
 
-    // TODO: Add validation schema
+    const { error } = purchaseValidator.validate(purchase);
+
+    if (error) {
+        return res.status(500).json(buildMessage('Ops! Algo deu errado =[', error));
+    }
 
     const trx = await getTransaction();
     const purchasesService = new PurchasesService(trx);
