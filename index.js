@@ -1,4 +1,5 @@
 require('dotenv').config()
+const path = require('path')
 const express = require('express')
 const app = express()
 const routes = require('./src/routes/routes')
@@ -15,7 +16,25 @@ console.log(token)
 
 app.use(express.json())
 app.use(cors())
+app.use(express.json())
+
+app.use(express.static(path.join(__dirname, 'public')));
+
 app.use(routes)
+
+app.get('*', function (_, res) {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+/*
+knex.migrate.rollback(null, true)
+    .then(() => {
+        console.log('Rollback finalizado!');
+    }).catch(err => {
+        console.error('Fudeu!!!!! ---------------------------');
+        console.error(err.message);
+    });
+*/
 
 // app.get('/api/force-varzea', async (req, res) => {
 //     const service = require('./src/services/PurchasesService')
