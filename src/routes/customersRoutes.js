@@ -4,7 +4,7 @@ const authMiddleware = require('../middlewares/Auth')
 
 const customerRoutes = express.Router();
 
-customerRoutes.use(authMiddleware);
+// customerRoutes.use(authMiddleware);
 
 customerRoutes.get('/', CustomersController.getCustumers);
 customerRoutes.get('/:id', CustomersController.getCustumerById);
