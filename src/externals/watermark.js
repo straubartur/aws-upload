@@ -77,8 +77,8 @@ function buildProcessorBody(purchase, items) {
                 positions: {
                     x: Number(item.coordinate_x) || 0,
                     y: Number(item.coordinate_y) || 0,
-                    height: 150,
-                    width: 150
+                    height: 200,
+                    width: 200
                 },
                 postId: item.id,
                 baseImagePath: item.aws_path_base,
