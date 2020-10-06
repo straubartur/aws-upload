@@ -12,6 +12,7 @@ purchasesRoutes.use(authMiddleware)
 
 purchasesRoutes.get('/', PurchasesController.getPurchases);
 purchasesRoutes.get('/:id', PurchasesController.getPurchaseById);
+purchasesRoutes.get('/force-process/:id', PurchasesController.forceProcess);
 purchasesRoutes.post('/', PurchasesController.createPurchases);
 purchasesRoutes.put('/:id', PurchasesController.updatePurchases);
 purchasesRoutes.delete('/:id', PurchasesController.deletePurchases);

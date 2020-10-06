@@ -4,6 +4,7 @@ const CustomersService = require('../services/CustomersService');
 const PackagesService = require('../services/PackagesService');
 const PurchasesService = require('../services/PurchasesService');
 const purchaseValidator = require('../validator/PurchaseValidator');
+const purchaseManager = require('../managers/purchase-manager');
 
 function getPurchases (req, res) {
     const { limit, page } = req.query;
@@ -179,6 +180,31 @@ async function processingResponse (req, res) {
     res.send('received =)')
 }
 
+async function forceProcess(req, res) {
+    const { id } = req.params;
+    try {
+        const purchasesService = new PurchasesService();
+        const purchase = await purchasesService.findById(id);
+        console.log('purchase', purchase)
+        let forced = false; 
+
+        if (purchase) {
+            forced = await purchaseManager.forceSyncPurchasePosts(purchase);
+        }
+        
+        if (forced) {
+            res.status(200).json(buildMessage(`Processando a venda ${id}`));
+        } else if (!purchase) {
+            res.status(404).json(buildMessage(`Venda não encontrada ${id}`));
+        } else {
+            res.status(400).json(buildMessage(`Não foi possível processar a venda ${id}`));
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).json(buildMessage('Ops! Algo deu errado =['));
+    }
+}
+
 module.exports = {
     getPurchases,
     getPurchaseById,
@@ -188,5 +214,6 @@ module.exports = {
     getGallery,
     generateLogoUrl,
     createPurchaseWithLogo,
-    processingResponse
+    processingResponse,
+    forceProcess
 };

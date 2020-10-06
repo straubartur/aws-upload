@@ -107,9 +107,11 @@ async function syncPurchasePostsByPackageId(package_id) {
  * @return { Promise<Boolean> }
  */
 async function syncPurchasePosts (purchase) {
+    console.log("syncPurchasePosts...")
     const isValid = await validatePurchase(purchase)
 
     if (!isValid) {
+        console.log("Validade false!")
         return false
     }
 
@@ -117,6 +119,7 @@ async function syncPurchasePosts (purchase) {
     const posts = await packagesPostsService.findByPackageId(purchase.package_id)
 
     if (posts.data && !posts.data.length) {
+        console.log("posts vazio! =[")
         return false
     }
 
@@ -129,12 +132,66 @@ async function syncPurchasePosts (purchase) {
 
             if (!postExists) {
                 const newPost = createPurchasePost(purchase, post)
+                console.log("Create posts", newPost.id)
                 return purchasePostsService.create(newPost)
             }
 
             return Promise.resolve(true)
         })
 
+        await Promise.all(promises)
+        await trx.commit()
+
+        setTimeout(watermark.processByPurchase, 0, purchase)
+
+        return true
+    } catch (error) {
+        console.log(error)
+        trx.rollback()
+        return false
+    }
+}
+
+/**
+ * Sync the values from Packages_posts to Purchase_posts
+ * @param { Purchase } purchase
+ * @return { Promise<Boolean> }
+ */
+async function forceSyncPurchasePosts (purchase) {
+    console.log("syncPurchasePosts...")
+    const isValid = await validatePurchase(purchase)
+
+    if (!isValid) {
+        console.log("Validade false!")
+        return false
+    }
+
+    const packagesPostsService = new PackagesPostsService()
+    const posts = await packagesPostsService.findByPackageId(purchase.package_id)
+
+    if (posts.data && !posts.data.length) {
+        console.log("posts vazio! =[")
+        return false
+    }
+
+    try {
+        const trx = await getTransaction()
+        const purchasePostsService = new PurchasePostsService(trx)
+
+        const promises = posts.data.map(async (post, i) => {
+
+            const purchasePost = await purchasePostsService.findOne({ purchase_id: purchase.id, package_post_id: post.id })
+
+            if (purchasePost && purchasePost.is_customizable) {
+                return purchasePostsService.updateById(purchasePost.id, { watermark_status: 'queued' })
+            } else {
+                const newPost = createPurchasePost(purchase, post)
+                console.log("Create posts", newPost.id)
+                return purchasePostsService.create(newPost)
+            }
+        })
+
+        
         await Promise.all(promises)
         await trx.commit()
 
@@ -163,5 +220,6 @@ async function existsPurchasePost (purchase_id, package_post_id) {
 module.exports = {
     validatePurchase,
     syncPurchasePosts,
+    forceSyncPurchasePosts,
     syncPurchasePostsByPackageId
 }
