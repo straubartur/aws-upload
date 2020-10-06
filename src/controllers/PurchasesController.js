@@ -6,7 +6,7 @@ const PurchasesService = require('../services/PurchasesService');
 const purchaseValidator = require('../validator/PurchaseValidator');
 
 function getPurchases (req, res) {
-    const { limit, page } = req.query;
+    const { limit = 1000, page } = req.query;
 
     const purchasesService = new PurchasesService();
 
