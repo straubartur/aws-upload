@@ -124,18 +124,17 @@ async function syncPurchasePosts (purchase) {
         const trx = await getTransaction()
         const purchasePostsService = new PurchasePostsService(trx)
 
-        const promises = posts.data.map(async (post, i) => {
-            const postExists = await existsPurchasePost(purchase.id, post.id)
-
+        const newPostList = [];
+        for (i = 0; i < posts.data.length; i++) {
+            const post = posts.data[i];
+            const postExists = await purchasePostsService.findOne({ purchase_id: purchase.id, package_post_id: post.id })
             if (!postExists) {
-                const newPost = createPurchasePost(purchase, post)
-                return purchasePostsService.create(newPost)
+                const newPost = createPurchasePost(purchase, post);
+                newPostList.push(newPost);
             }
+        }
 
-            return Promise.resolve(true)
-        })
-
-        await Promise.all(promises)
+        await purchasePostsService.create(newPostList)
         await trx.commit()
 
         setTimeout(watermark.processByPurchase, 0, purchase)
